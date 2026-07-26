@@ -63,6 +63,9 @@ export class AiModule {
     soldier.root.position.set(x, 0, z);
     soldier.root.rotation.y = yaw;
     this.engine.scene.add(soldier.root);
+    // Character materials are created outside the world library, so they need
+    // the cascade injection explicitly or they render several times too bright.
+    this.engine.modules.get('lighting')?.registerObject?.(soldier.root);
 
     const agent = {
       ...soldier,

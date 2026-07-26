@@ -101,6 +101,10 @@ export class WeaponsModule {
     const layer = CAMERA.viewmodelLayer ?? 1;
     this.rig.traverse(o => o.layers.set(layer));
 
+    // Same as the characters: without the cascade injection the viewmodel is
+    // lit by every cascade at once and blows out.
+    engine.modules.get('lighting')?.registerObject?.(this.rig);
+
     this.rig.position.copy(POSE_HIP.pos);
     this.rig.rotation.copy(POSE_HIP.rot);
   }

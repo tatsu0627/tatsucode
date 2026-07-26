@@ -57,10 +57,14 @@ export class LightingModule {
     this._applyAmbient();
     this._buildEnvironment();
 
-    // Every world material needs the CSM shader injection to receive cascades.
+    // Every lit material needs the CSM shader injection. This is not optional
+    // and not only about shadows: without it a material is lit by all four
+    // cascade lights at full strength instead of the one covering its depth
+    // range, so it renders roughly four times too bright. Modules that create
+    // materials after this point must call registerMaterial().
     const world = engine.modules.get('world');
     if (world?.materials) {
-      for (const m of world.materials.values()) this.shadows.setupMaterial(m);
+      for (const m of world.materials.values()) this.registerMaterial(m);
     }
 
     this._addLocalLights(scene);
@@ -127,6 +131,31 @@ export class LightingModule {
       scene.add(l);
       this.locals.push(l);
     }
+  }
+
+  /**
+   * Give a material the cascaded-shadow shader injection. Idempotent — CSM
+   * installs an onBeforeCompile hook, and running it twice would inject the
+   * chunk twice and fail to compile.
+   */
+  registerMaterial(material) {
+    if (!material || !this.shadows) return material;
+    if (!this._csmMaterials) this._csmMaterials = new WeakSet();
+    if (this._csmMaterials.has(material)) return material;
+    this._csmMaterials.add(material);
+    this.shadows.setupMaterial(material);
+    return material;
+  }
+
+  /** Register every unique material under an object. */
+  registerObject(root) {
+    root?.traverse?.(o => {
+      const m = o.material;
+      if (!m) return;
+      if (Array.isArray(m)) m.forEach(x => this.registerMaterial(x));
+      else this.registerMaterial(m);
+    });
+    return root;
   }
 
   addLocalLight(light) {
