@@ -49,7 +49,10 @@ export function installCaptureMode(engine) {
     if (p.setPose) p.setPose(shot.pos, shot.look);
   }
   if (engine.has('weapons')) {
-    engine.get('weapons').setVisible?.(shot.viewmodel !== false);
+    // Only the vantage that explicitly asks for the viewmodel gets it; every
+    // other shot is judging the world, and a weapon across the lower third
+    // hides a third of what is being reviewed.
+    engine.get('weapons').setVisible?.(shot.viewmodel === true);
   }
 
   const cam = engine.camera;
