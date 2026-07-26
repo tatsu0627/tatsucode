@@ -103,15 +103,25 @@ for (const shot of shots) {
     // A couple of extra frames for anything that converges on __READY__'s heels.
     await page.waitForTimeout(400);
     const file = `${out}/${shot}${process.env.SHOOT_SUFFIX || ''}.png`;
-    // Read the WebGL canvas directly rather than using page.screenshot(): the
-    // headless compositor stalls indefinitely on a continuously-animating
-    // canvas under SwiftShader. The engine enables preserveDrawingBuffer in
-    // capture mode so the pixels are still there when we ask for them.
-    const dataUrl = await page.evaluate(() => {
-      const c = document.getElementById('viewport');
-      return c.toDataURL('image/png');
-    });
-    writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
+    // Two capture paths, because they see different things.
+    //
+    // The canvas path reads the WebGL drawing buffer directly. It is the
+    // default because the headless compositor stalls indefinitely on a
+    // continuously-animating canvas under SwiftShader — but it can only ever
+    // see the 3D render. The HUD is a DOM overlay, so it is invisible here no
+    // matter what the UI module does.
+    //
+    // SHOOT_DOM=1 uses the compositor instead, which is the only way to review
+    // the overlay. It is slower and can stall, so it is opt-in.
+    if (process.env.SHOOT_DOM === '1') {
+      await page.screenshot({ path: file, timeout: 180000, animations: 'disabled' });
+    } else {
+      const dataUrl = await page.evaluate(() => {
+        const c = document.getElementById('viewport');
+        return c.toDataURL('image/png');
+      });
+      writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
+    }
     const fps = await page.evaluate(() => {
       const e = window.__ENGINE__;
       return e ? Math.round(e.frame / Math.max(e.elapsed, 0.001)) : 0;
