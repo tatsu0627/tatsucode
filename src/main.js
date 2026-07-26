@@ -9,6 +9,7 @@ import { FxModule } from './fx/fx.js';
 import { AiModule } from './ai/ai.js';
 import { UiModule } from './ui/ui.js';
 import { AudioModule } from './audio/audio.js';
+import { GameModule } from './core/game.js';
 import { installCaptureMode } from './core/capture.js';
 
 const engine = new Engine(document.getElementById('viewport'));
@@ -24,6 +25,9 @@ engine.add('ai', new AiModule());
 engine.add('combat', new CombatModule());
 engine.add('fx', new FxModule());
 engine.add('audio', new AudioModule());
+// After ai and combat so it observes a settled frame, and before ui so its
+// callouts reach the HUD the same frame they are decided.
+engine.add('game', new GameModule());
 engine.add('ui', new UiModule());
 engine.add('render', new RenderModule());
 

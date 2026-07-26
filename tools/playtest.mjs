@@ -218,6 +218,36 @@ check('enemies shoot back', afterFight.health < beforeFight.health,
 check('player survives long enough to react', afterFight.health > 0,
   `health ${beforeFight.health} -> ${afterFight.health} after ~7s exposed`);
 
+// --- game loop ------------------------------------------------------------
+// Death must lead somewhere: a respawn, or a failed mission. Drive the player
+// to zero and watch the state machine rather than assuming it exists.
+await page.evaluate(() => {
+  const p = window.__ENGINE__.modules.get('player');
+  p._spawnGuard = 0;
+  p.applyDamage(999, {});
+});
+await waitFrames(3);
+const onDeath = await page.evaluate(() => window.__ENGINE__.modules.get('game').state);
+check('death enters a death state', onDeath === 'dead' || onDeath === 'failed', onDeath);
+
+await waitFrames(70);
+const afterRespawn = await page.evaluate(() => {
+  const g = window.__ENGINE__.modules.get('game');
+  const p = window.__ENGINE__.modules.get('player');
+  return { state: g.state, health: p.health, dead: p.dead, deaths: g.score.deaths };
+});
+check('the player redeploys after dying',
+  afterRespawn.state === 'active' && !afterRespawn.dead && afterRespawn.health > 0,
+  `state=${afterRespawn.state} health=${Math.round(afterRespawn.health)} deaths=${afterRespawn.deaths}`);
+
+// Clearing the garrison must complete the mission.
+await page.evaluate(() => {
+  for (const a of window.__ENGINE__.modules.get('ai').agents) a.alive = false;
+});
+await waitFrames(3);
+const cleared = await page.evaluate(() => window.__ENGINE__.modules.get('game').state);
+check('clearing the garrison completes the mission', cleared === 'complete', cleared);
+
 check('no runtime errors during play', errors.length === 0,
   errors.slice(0, 3).join(' | ').slice(0, 200));
 

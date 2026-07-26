@@ -100,6 +100,7 @@ export class CombatModule {
       this.hits++;
       const damage = this._damageAt(weapon?.damage ?? 24, best.distance) * best.multiplier;
       const killed = this.applyDamage(best.agent, damage, best);
+      if (killed) engine.modules.get('game')?.onKill?.(best.agent, { ...best, weapon });
       fx?.impact?.(best.point, best.normal, 'flesh');
       this._tracer(fx, origin, best.point, weapon);
       engine.modules.get('ui')?.hitmarker?.(killed ? 'kill' : (best.tag === 'head' ? 'head' : 'body'));

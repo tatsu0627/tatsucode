@@ -74,6 +74,7 @@ export class AiModule {
       const v = parseInt(new URLSearchParams(location.search).get('enemies') ?? '', 10);
       if (Number.isFinite(v)) n = v;
     } catch { /* no location in non-browser contexts */ }
+    this._waveSize = n;
     this.spawnWave(n);
   }
 
@@ -132,6 +133,14 @@ export class AiModule {
 
     this.agents.push(agent);
     return agent;
+  }
+
+  /** Clear the garrison and repopulate it, for a fresh match. */
+  reset() {
+    for (const a of this.agents) this.engine.scene.remove(a.root);
+    this.agents.length = 0;
+    this._budgetCursor = 0;
+    this.spawnWave(this._waveSize ?? 6);
   }
 
   /** Line of sight from the agent's eye to the player, blocked by level geo. */
