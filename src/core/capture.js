@@ -22,7 +22,7 @@ export const SHOTS = {
   street:   { pos: [ -2.0, 1.70,  15.5], look: [ -2.0, 2.2, -34.0], fov: 75 },
   interior: { pos: [ -8.5, 1.70,   1.5], look: [-16.0, 1.8,  -6.0], fov: 80 },
   weapon:   { pos: [  3.0, 1.70,   8.0], look: [ -6.0, 2.0,  -6.0], fov: 80, viewmodel: true },
-  vista:    { pos: [ 22.0, 9.00,  26.0], look: [ -6.0, 1.0, -26.0], fov: 55 },
+  vista:    { pos: [ 34.0, 17.0,  40.0], look: [ -9.0, 0.5, -26.0], fov: 52 },
   shadows:  { pos: [-13.0, 1.60,   8.0], look: [  4.0, 2.5,  -8.0], fov: 70 },
 };
 
