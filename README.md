@@ -108,7 +108,13 @@ Known outstanding issues, stated plainly:
   interiors. The grounding cue in this scene comes from the sun shadows.
   If stronger grounding is wanted it should come from deliberately art-directed
   contact darkening, not from inflating the AO radius.
-- **The sky has no cloud layer**, so wide shots have a large empty gradient.
+- **The backdrop ridge may or may not have been floating.** The ground plane
+  ended at z=-110 while the ridge sits at z=-150 to -320, so geometrically it
+  had no terrain beneath it; the plane was widened to 800 m. But the re-render
+  came back all but identical, because at that range the haze washes ground and
+  ridge to the same value and the difference cannot be seen. The wider plane is
+  kept because terrain ending before the backdrop is wrong regardless, not
+  because a visible fix was demonstrated.
 - **The concrete texture's dome stamps read as regular dark ellipses** across
   large flat surfaces — most visible on the interior ceiling and floor, where
   they look like leopard spots rather than staining. The stamp radius wants
