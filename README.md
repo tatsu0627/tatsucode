@@ -83,6 +83,45 @@ Frames are then judged against `docs/visual-standard.md`, which lists the
 specific artifacts that give away amateur real-time rendering and the score
 each axis must reach.
 
+## Current state
+
+Every module listed above is implemented and wired. The scene boots, renders
+through the full post chain, and is populated: a garrison of procedurally rigged
+soldiers with perception and stance behaviour, a first-person carbine with
+spring-driven sway and recoil, hitscan combat with per-hitbox multipliers and
+range falloff, pooled particles and decals, and fully synthesised audio.
+
+Known outstanding issues, stated plainly:
+
+- **Ambient occlusion is weaker than it should be.** GTAO runs and produces
+  occlusion at silhouettes, but not the broad contact shading that grounds
+  objects, and it does not respond to the world-space radius. Two hypotheses
+  were tested and disproved (packed depth-stencil format; radius too small).
+  The remaining suspect is the shared G-buffer handoff — `?aogbuffer=own` makes
+  GTAO render its own normals and depth so the two can be compared.
+- **The sky has no cloud layer**, so wide shots have a large empty gradient.
+- **Distant backdrop geometry is untextured**, relying entirely on haze.
+- The HUD has not yet been visually reviewed.
+
+### Debugging tools
+
+Two of these exist because the browser was the slowest possible place to find a
+bug, and neither texture synthesis nor geometry construction needs a GPU:
+
+```sh
+node tools/texbench.mjs 0.5     # per-texture-set synthesis timings
+node tools/levelbench.mjs 0.5   # material + geometry build, triangle/draw counts
+node tools/probe.mjs            # boot the scene, dump live renderer/lighting state
+```
+
+Renderer buffers can be captured directly, which is how the AO problem was
+localised:
+
+```sh
+SHOOT_PARAMS='post=ao' SHOOT_SUFFIX='_ao' node tools/shoot.mjs hero
+# post=ao | normal | depth | velocity | scene
+```
+
 ## Honest limitations
 
 This is a browser game. It renders procedurally generated assets through WebGL2
