@@ -167,7 +167,11 @@ export class RenderModule {
 
     // ssao
     this.gtao = new GTAOPass(engine.scene, engine.camera, 1, 1);
-    this._adoptExternalGBuffer(this.gtao);
+    // Sharing the main G-buffer saves a full scene pass, but occlusion comes
+    // out as hairline creases with no contact shading and does not respond to
+    // the radius — so the handoff is suspect. ?aogbuffer=own lets GTAO render
+    // its own normals and depth to isolate that.
+    if (this._urlFlag('aogbuffer') !== 'own') this._adoptExternalGBuffer(this.gtao);
     this.gtao.updateGtaoMaterial({
       radius: POST.ssao?.radius ?? 0.55,
       // Small distanceExponent keeps samples bunched near the shading point:
@@ -284,6 +288,10 @@ export class RenderModule {
       pass.normalRenderTarget.setSize(1, 1);
     };
     pass.normalRenderTarget.setSize(1, 1);
+  }
+
+  _urlFlag(name) {
+    try { return new URLSearchParams(location.search).get(name); } catch { return null; }
   }
 
   setQuality(preset) {
