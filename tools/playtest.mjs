@@ -46,7 +46,9 @@ const check = (name, pass, detail = '') => {
   console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}${detail ? `  — ${detail}` : ''}`);
 };
 
-await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load', timeout: 90000 });
+// nolock=1 because headless Chromium never grants pointer lock, and the game
+// gates all input behind it.
+await page.goto(`http://127.0.0.1:${PORT}/?nolock=1`, { waitUntil: 'load', timeout: 90000 });
 await page.waitForFunction(
   'window.__BOOTED__ === true || window.__BOOT_ERROR__ !== undefined',
   null, { timeout: 900000 });
@@ -87,9 +89,27 @@ const a = await snap();
 check('player module reports a position', Array.isArray(a.pos), a.pos.join(', '));
 check('enemies spawned', a.agents > 0, `${a.agents} agents, ${a.alive} alive`);
 
-// --- pointer lock + look -------------------------------------------------
-await page.click('#viewport').catch(() => {});
-await page.waitForTimeout(500);
+// --- start the game -------------------------------------------------------
+// The game opens on a main menu which deliberately disables the player. Until
+// DEPLOY is pressed there is nothing to drive, and the whole suite reads as
+// "movement is broken" when in fact the match has not begun.
+const deployed = await page.evaluate(() => {
+  const b = document.querySelector('[data-act="play"]');
+  if (!b) return false;
+  b.click();
+  return true;
+});
+check('main menu offers a deploy control', deployed);
+await page.waitForTimeout(900);
+const started = await page.evaluate(() => {
+  const p = window.__ENGINE__.modules.get('player');
+  return { enabled: p.enabled !== false };
+});
+check('deploying enables the player', started.enabled);
+
+// --- look -----------------------------------------------------------------
+await page.mouse.move(480, 270);
+await page.waitForTimeout(300);
 await page.mouse.move(480, 270);
 for (let i = 0; i < 12; i++) {
   await page.mouse.move(480 + i * 18, 270, { steps: 1 });
