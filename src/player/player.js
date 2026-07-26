@@ -5,6 +5,12 @@ import { WorldCollision, makeContactAcc, resetContactAcc } from './collision.js'
 import { ViewEffects } from './vieweffects.js';
 import { clamp, saturate, lerp, damp, easeInOut, easeOutCubic } from './mathx.js';
 
+// Seconds of invulnerability after spawning, then how long without damage
+// before health starts returning, and how fast.
+const SPAWN_PROTECT = 3.0;
+const REGEN_DELAY = 4.5;
+const REGEN_RATE = 22;
+
 /**
  * Owns input, movement, collision response and the camera transform.
  *
@@ -118,6 +124,8 @@ export class PlayerModule {
     this.health = 100;
     this.maxHealth = 100;
     this.dead = false;
+    this._spawnGuard = SPAWN_PROTECT;
+    this._sinceDamage = 999;
     this._trauma = 0;
 
     this.tuning = TUNING;
@@ -223,6 +231,11 @@ export class PlayerModule {
 
   applyDamage(amount, info) {
     if (this.dead) return;
+    // Spawn protection: a player who materialises in the open under six guns
+    // has no chance to orient, and it makes any automated mobility check a
+    // coin flip on whether they survive long enough to walk.
+    if (this._spawnGuard > 0) return;
+    this._sinceDamage = 0;
     this.health = Math.max(0, this.health - amount);
     this.addShake(clamp(amount / 55, 0.06, 0.5));
     // Directional flinch: the view kicks away from the hit.
@@ -252,6 +265,8 @@ export class PlayerModule {
     this.velocity.set(0, 0, 0);
     this.health = this.maxHealth;
     this.dead = false;
+    this._spawnGuard = SPAWN_PROTECT;
+    this._sinceDamage = 999;
     this._slide = null; this._mantle = null;
     this.view.reset();
   }
@@ -584,6 +599,14 @@ export class PlayerModule {
 
     // Hit flinch decays fast and hard.
     this._flinch.multiplyScalar(Math.exp(-9 * dt));
+
+    // Spawn protection, then regenerating health after a lull — the genre
+    // convention, and what makes a fight recoverable rather than attritional.
+    this._spawnGuard = Math.max(0, (this._spawnGuard ?? 0) - dt);
+    this._sinceDamage = (this._sinceDamage ?? 999) + dt;
+    if (!this.dead && this._sinceDamage > REGEN_DELAY && this.health < this.maxHealth) {
+      this.health = Math.min(this.maxHealth, this.health + REGEN_RATE * dt);
+    }
 
     this._applyCamera(dt);
   }

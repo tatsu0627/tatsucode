@@ -29,15 +29,21 @@ const TUNING = {
   // erase the player in well under a second, which is not a fight, it is a
   // cutscene. Long reaction, short bursts, long pauses and generous spread
   // give the player time to break line of sight and answer back.
-  reactionMin: 0.45,     // seconds between acquiring and first shot
-  reactionMax: 1.10,
-  fireRpm: 520,
-  burstMin: 3,
-  burstMax: 6,
-  burstPauseMin: 1.10,
-  burstPauseMax: 2.30,
-  spread: 0.055,         // radians; deliberately loose
-  damage: 11,
+  reactionMin: 0.80,     // seconds between acquiring and first shot
+  reactionMax: 1.80,
+  fireRpm: 480,
+  burstMin: 2,
+  burstMax: 4,
+  burstPauseMin: 1.90,
+  burstPauseMax: 3.40,
+  spread: 0.085,         // radians; deliberately loose
+  damage: 6,
+  // At most this many agents may fire at once. Without a cap, a garrison that
+  // all has line of sight converges into a single lethal volley and the player
+  // dies before they can react — measured, not guessed: the first tuning killed
+  // the player during the movement test. Holding the rest in suppression is how
+  // squad shooters keep a fight readable.
+  maxConcurrentFire: 2,
   muzzleVelocity: 780,
   maxEngageRange: 48,
 };
@@ -207,6 +213,13 @@ export class AiModule {
     a.burstPause = Math.max(0, a.burstPause - dt);
 
     const canEngage = a.stance === STANCE.engage && a._sees && !player?.dead;
+
+    // Attack token: mid-burst agents keep firing, but a new burst may only
+    // start if the squad is under its concurrent-fire cap.
+    if (canEngage && a.burstLeft <= 0 && a.burstPause <= 0) {
+      const firing = this.agents.reduce((n, x) => n + (x.alive && x.burstLeft > 0 ? 1 : 0), 0);
+      if (firing >= TUNING.maxConcurrentFire) return;
+    }
     if (!canEngage) {
       // Losing sight resets the hesitation, so re-acquiring is not instant.
       a.reactionT = 0;
