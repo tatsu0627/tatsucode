@@ -116,7 +116,14 @@ export class LightingModule {
     // Kept few and deliberately placed: every shadow-casting point light is a
     // full cubemap render, so they are a real budget item, not set dressing.
     const specs = [
-      { pos: [-9.4, 2.7, -2.0], color: 0xbfd4ff, intensity: 9, distance: 12, shadow: true },
+      // A tungsten work light, not a cool one. This was 0xbfd4ff at intensity 9,
+      // which was doing two bad things at once: blowing to a flat white disc
+      // instead of reading as a fitting with a hot centre, and — as the only
+      // meaningful light source in a room whose sole other input is a blue sky
+      // through the IBL — tinting the entire interior cold. A practical should
+      // be the warm counterweight to the sky, which is what separates an
+      // interior from a cave.
+      { pos: [-9.4, 2.7, -2.0], color: 0xffd7a4, intensity: 5.5, distance: 14, shadow: true },
       { pos: [-16.0, 2.8, -9.0], color: 0xffd9a0, intensity: 6, distance: 10, shadow: false },
       { pos: [15.0, 5.2, -4.0], color: 0xfff0d0, intensity: 14, distance: 20, shadow: false },
       { pos: [5.5, 5.6, -2.0], color: 0xffe9c4, intensity: 12, distance: 16, shadow: false },

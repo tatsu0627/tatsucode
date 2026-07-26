@@ -35,20 +35,30 @@ function materials() {
     envMapIntensity: VM_ENV,
     color: 0x33363b, roughness: 0.60, metalness: 0.0,
   });
-  // Hard-anodised aluminium: a metal, but a rough one. Type III anodising is
-  // matte — a glossy receiver is the classic giveaway of a fake gun model.
+  // Hard-anodised aluminium. Type III anodising is an oxide conversion layer,
+  // not bare metal — it is a dielectric coating a few tens of microns thick
+  // over the alloy, so it is neither a mirror nor fully metallic. At
+  // metalness 1.0 / roughness 0.42 it behaved like polished steel: under the
+  // viewmodel key the receiver, magazine well and stock all blew to flat pale
+  // grey, which read in review as "white blocks stuck to the gun". A matte
+  // anodised finish is the whole look of a modern carbine; a glossy receiver
+  // is the classic giveaway of a fake gun model.
   MATS.alloy = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
-    color: 0x4a4e54, roughness: 0.42, metalness: 1.0,
+    color: 0x3b3e43, roughness: 0.68, metalness: 0.35,
   });
-  // Nitrided barrel steel, darker and slightly glossier than the receiver.
+  // Nitrided barrel steel. This one really is bare metal — melonited steel is
+  // a hard, dark, slightly glossy surface — so it keeps its metalness and is
+  // the only part of the weapon that should catch a sharp highlight.
   MATS.steel = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
-    color: 0x2c2f33, roughness: 0.32, metalness: 1.0,
+    color: 0x24272a, roughness: 0.38, metalness: 0.95,
   });
+  // Optic bodies are anodised aluminium as well, and usually flatter than the
+  // receiver because they are bead-blasted first.
   MATS.optic = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
-    color: 0x2a2d31, roughness: 0.48, metalness: 1.0,
+    color: 0x26292d, roughness: 0.72, metalness: 0.3,
   });
   // Coated lens: strong tint, low roughness, and emissive enough that the
   // reticle reads against a bright desert background.

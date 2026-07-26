@@ -177,7 +177,13 @@ export const CAMERA = {
 export const POST = {
   order: ['gbuffer', 'ssao', 'lighting', 'ssr', 'volumetric', 'taa', 'motionblur',
           'bloom', 'dof', 'tonemap', 'grain', 'chromatic', 'vignette', 'sharpen'],
-  bloom: { threshold: 1.5, strength: 0.28, radius: 0.6 },
+  // `clamp` bounds what any one pixel may contribute to the blur chain.
+  // three's high-pass filter passes bright texels through unclamped, and the
+  // sky's sun disc is thousands of times brighter than the scene — spread over
+  // the bloom radius that floods the frame rather than glowing. Measured with
+  // tools/ablate.mjs on the sun-facing vantage: bloom was taking the clipped
+  // area to 21.2% of the frame and the mean luminance from 127 to 222.
+  bloom: { threshold: 1.5, strength: 0.28, radius: 0.6, clamp: 4.0 },
   ssao: { radius: 1.2, intensity: 1.5, bias: 0.025 },
   motionBlur: { strength: 0.55, samples: 12 },
   dof: { enabled: true, focusDistance: 14, aperture: 0.30, maxBlur: 0.0035 },

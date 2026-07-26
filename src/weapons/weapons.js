@@ -128,7 +128,12 @@ export class WeaponsModule {
    * are the calibrated middle.
    */
   _addViewmodelLights(engine, layer) {
-    const key = new THREE.DirectionalLight(0xffe9cf, 3.6);
+    // 3.6 was calibrated against a receiver that was wrongly fully metallic and
+    // therefore reflecting almost nothing diffusely. With the anodised finish
+    // in weapons/model.js behaving like the dielectric coating it is, that key
+    // blew the receiver and stock to flat white. 2.3 keeps the weapon readable
+    // against sunlit sand without clipping its largest faces.
+    const key = new THREE.DirectionalLight(0xffe9cf, 2.3);
     key.position.set(0.6, 0.9, 0.4);          // over the player's left shoulder
     key.target.position.set(0, -0.2, -1);
     key.layers.set(layer);

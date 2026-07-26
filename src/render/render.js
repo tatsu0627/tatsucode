@@ -220,6 +220,7 @@ export class RenderModule {
       POST.bloom?.radius ?? 0.62,
       POST.bloom?.threshold ?? 1.15,
     );
+    this._clampBloomInput(POST.bloom?.clamp ?? 4.0);
     this.chain.add(this.bloom);
 
     // dof
@@ -425,6 +426,38 @@ export class RenderModule {
   _jitterProjection(proj) {
     proj.elements[8] += (this._jitterX * 2) / this._w;
     proj.elements[9] += (this._jitterY * 2) / this._h;
+  }
+
+  /**
+   * Bound what the bloom's blur chain is allowed to spread.
+   *
+   * three's LuminosityHighPassShader passes bright texels through completely
+   * unclamped — above the threshold it is a straight `mix(black, texel)`. A
+   * physical sky's sun disc is thousands of times brighter than the scene, so
+   * it enters the blur chain at its full HDR value and is then smeared across
+   * a wide radius, depositing hundreds of units onto every neighbouring pixel.
+   * That is not a glow, it is a flood fill.
+   *
+   * Measured on the sun-facing vantage with tools/ablate.mjs: switching bloom
+   * off took the clipped area from 21.2% of the frame to 9.5% and the mean
+   * frame luminance from 222 to 127. A bloom at strength 0.28 was nearly
+   * doubling the brightness of the whole image.
+   *
+   * Clamping the high-pass input keeps the bloom's shape and its falloff while
+   * bounding how much energy any one pixel can contribute. Real lenses behave
+   * this way too: veiling glare from the sun saturates rather than scaling
+   * without limit with the source's intensity.
+   */
+  _clampBloomInput(clamp) {
+    const hp = this.bloom?.materialHighPassFilter;
+    if (!hp) return;
+    hp.uniforms.uBloomClamp = { value: clamp };
+    hp.fragmentShader = hp.fragmentShader
+      .replace('uniform float smoothWidth;',
+        'uniform float smoothWidth;\n\t\tuniform float uBloomClamp;')
+      .replace('gl_FragColor = mix( outputColor, texel, alpha );',
+        'gl_FragColor = mix( outputColor, min( texel, vec4( uBloomClamp ) ), alpha );');
+    hp.needsUpdate = true;
   }
 
   _updateStaticness(camera, dt) {
