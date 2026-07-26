@@ -88,6 +88,10 @@ const snap = () => page.evaluate(() => {
     keyForward: !!p.input?.down?.('forward'),
     wish: p.state.wishDir ? p.state.wishDir.toArray().map(n => +n.toFixed(2)) : null,
     moveIntent: !!p.state.moveIntent,
+    axis: p.state.axis || null,
+    dead: !!p.dead,
+    sliding: !!p.state.sliding,
+    mantling: !!p.state.mantling,
     vel: p.velocity.toArray().map(n => +n.toFixed(2)),
   };
 });
@@ -137,8 +141,9 @@ const stopped = await snap();
 
 const travelled = Math.hypot(moving.pos[0] - look.pos[0], moving.pos[2] - look.pos[2]);
 check('W moves the player', travelled > 0.5,
-  `${travelled.toFixed(2)} m — locked=${moving.locked} key=${moving.keyForward} ` +
-  `wish=${JSON.stringify(moving.wish)} intent=${moving.moveIntent} vel=${JSON.stringify(moving.vel)}`);
+  `${travelled.toFixed(2)} m — key=${moving.keyForward} axis=${JSON.stringify(moving.axis)} ` +
+  `intent=${moving.moveIntent} wish=${JSON.stringify(moving.wish)} vel=${JSON.stringify(moving.vel)} ` +
+  `dead=${moving.dead} slide=${moving.sliding} mantle=${moving.mantling}`);
 check('player decelerates on release', stopped.speed < Math.max(0.5, moving.speed * 0.5),
   `speed ${moving.speed} -> ${stopped.speed}`);
 check('player stays on the ground', stopped.onGround === true);

@@ -307,6 +307,11 @@ export class PlayerModule {
     let az = (inp.down('forward') ? 1 : 0) - (inp.down('back') ? 1 : 0);
     if (this.dead) { ax = 0; az = 0; }
     const moveIntent = ax !== 0 || az !== 0;
+    // The module contract advertises state.moveIntent and state.wishDir to
+    // other modules, but they were only ever computed as locals and discarded,
+    // so anything reading them saw the constructor's defaults forever.
+    this.state.moveIntent = moveIntent;
+    this.state.axis = { x: ax, z: az };
 
     // ---- intents ----------------------------------------------------------
     if (inp.justPressed('crouchToggle')) this._crouchToggle = !this._crouchToggle;
@@ -392,6 +397,7 @@ export class PlayerModule {
     else if (this._adsMix > 0.35) wishSpeed = lerp(T.walkSpeed, T.adsSpeed, saturate((this._adsMix - 0.35) / 0.65));
     wishSpeed *= wish.length() || 0;
     const wishDir = wish.lengthSq() > 1e-8 ? wish.normalize() : wish;
+    this.state.wishDir.copy(wishDir);
 
     // ---- integrate --------------------------------------------------------
     const grounded = wasGround;
