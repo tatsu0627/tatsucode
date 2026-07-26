@@ -32,9 +32,16 @@ export class GBufferPass {
     });
     this.target.texture.name = 'gbuffer.normal';
 
+    // Plain depth, not depth-stencil. The renderer is created with stencil
+    // disabled, so the packed DEPTH24_STENCIL8 format buys nothing — and the
+    // consumers that sample this texture (GTAO, SSR, volumetrics) reconstruct
+    // view position from it expecting a straight depth read. Sampling a packed
+    // depth-stencil target gave occlusion only at large depth discontinuities,
+    // which showed up as hairline creases at silhouettes and no contact
+    // shading anywhere, regardless of AO radius.
     const depth = new THREE.DepthTexture(1, 1);
-    depth.format = THREE.DepthStencilFormat;
-    depth.type = THREE.UnsignedInt248Type;
+    depth.format = THREE.DepthFormat;
+    depth.type = THREE.UnsignedIntType;
     depth.minFilter = THREE.NearestFilter;
     depth.magFilter = THREE.NearestFilter;
     depth.name = 'gbuffer.depth';
