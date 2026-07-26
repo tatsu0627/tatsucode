@@ -89,7 +89,16 @@ for (const shot of shots) {
   const url = `http://127.0.0.1:${PORT}/?shot=${shot}`;
   try {
     await page.goto(url, { waitUntil: 'load', timeout: 45000 });
-    await page.waitForFunction('window.__READY__ === true', null, { timeout: 60000 });
+    // Convergence is 64 frames through the full post chain. Under SwiftShader
+    // that is minutes, not seconds — a short timeout here reports "failed" for
+    // a scene that is merely still accumulating.
+    const t0 = Date.now();
+    await page.waitForFunction(
+      'window.__READY__ === true || window.__BOOT_ERROR__ !== undefined',
+      null, { timeout: 900000 });
+    const boot = await page.evaluate(() => window.__BOOT_ERROR__ || null);
+    if (boot) throw new Error(`boot failed: ${boot.stack || boot.message}`);
+    console.log(`     converged in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
     // A couple of extra frames for anything that converges on __READY__'s heels.
     await page.waitForTimeout(400);
     const file = `${out}/${shot}.png`;
