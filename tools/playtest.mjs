@@ -94,6 +94,7 @@ const snap = () => page.evaluate(() => {
     agents: ai.agents.length,
     alive: ai.agents.filter(a => a.alive).length,
     engaged: ai.agents.filter(a => a.stance === 2).length,
+    aiShots: ai.agents.reduce((n, x) => n + (x.shotsFired || 0), 0),
     // Diagnostics: distinguish "input never arrived" from "input arrived but
     // movement was rejected".
     locked: !!p.input?.locked,
@@ -198,6 +199,17 @@ check('reload draws from reserve', postReload.reserve < preFire.reserve,
 // --- AI -------------------------------------------------------------------
 check('AI notices the player', postReload.engaged > 0,
   `${postReload.engaged}/${postReload.alive} engaged`);
+
+// --- return fire ----------------------------------------------------------
+// Stand exposed and let the garrison work. This asserts both halves of a fight:
+// the enemy must be able to hurt the player, and must not delete them instantly.
+const beforeFight = await snap();
+await waitFrames(120);
+const afterFight = await snap();
+check('enemies shoot back', afterFight.health < beforeFight.health,
+  `health ${beforeFight.health} -> ${afterFight.health}`);
+check('a firefight is survivable for a few seconds', afterFight.health > 0,
+  `health ${afterFight.health}`);
 
 check('no runtime errors during play', errors.length === 0,
   errors.slice(0, 3).join(' | ').slice(0, 200));

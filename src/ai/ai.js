@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createSoldier, EYE_LOCAL, STANCE_HIP_Y } from './soldier.js';
+import { createSoldier, EYE_LOCAL, STANCE_HIP_Y, WEAPON_ANCHORS } from './soldier.js';
 
 /**
  * Owns enemy agents: rigs, animation, perception, hitboxes.
@@ -23,6 +23,23 @@ const TUNING = {
   visionHalfAngle: Math.PI * 0.42,
   turnRate: 3.2,
   memory: 6.0,           // seconds of hunting after losing sight
+
+  // --- weapon ------------------------------------------------------------
+  // Tuned so a firefight is survivable. Six agents firing accurately would
+  // erase the player in well under a second, which is not a fight, it is a
+  // cutscene. Long reaction, short bursts, long pauses and generous spread
+  // give the player time to break line of sight and answer back.
+  reactionMin: 0.45,     // seconds between acquiring and first shot
+  reactionMax: 1.10,
+  fireRpm: 520,
+  burstMin: 3,
+  burstMax: 6,
+  burstPauseMin: 1.10,
+  burstPauseMax: 2.30,
+  spread: 0.055,         // radians; deliberately loose
+  damage: 11,
+  muzzleVelocity: 780,
+  maxEngageRange: 48,
 };
 
 const POSTS = [
@@ -37,6 +54,10 @@ export class AiModule {
     this._toPlayer = new THREE.Vector3();
     this._fwd = new THREE.Vector3();
     this._ray = new THREE.Raycaster();
+    this._muzzle = new THREE.Vector3();
+    this._aim = new THREE.Vector3();
+    this._side = new THREE.Vector3();
+    this._up = new THREE.Vector3();
     this._budgetCursor = 0;
   }
 
@@ -82,7 +103,20 @@ export class AiModule {
       hitFlash: 0,
       _sees: false,
       _aimMix: 0,
+      _reaction: TUNING.reactionMin +
+        Math.random() * (TUNING.reactionMax - TUNING.reactionMin),
+      reactionT: 0,
+      fireCd: 0,
+      burstLeft: 0,
+      burstPause: 0,
     };
+
+    // A node at the weapon's muzzle so shots and flashes originate from the
+    // barrel rather than from the agent's centre.
+    const muzzleNode = new THREE.Object3D();
+    muzzleNode.position.copy(WEAPON_ANCHORS.muzzle);
+    soldier.weaponMount.add(muzzleNode);
+    agent.muzzleNode = muzzleNode;
     agent.onDamage = () => {
       agent.hitFlash = 1;
       agent.stance = STANCE.engage;
@@ -159,7 +193,68 @@ export class AiModule {
       a.root.rotation.y = a.yaw;
 
       this._animateIdle(a, dt);
+      this._updateWeapon(a, dt, playerPos, player);
     }
+  }
+
+  /**
+   * Burst-fire discipline: acquire, hesitate, fire a short burst, pause, repeat.
+   * Only fires with a live line of sight, so an agent cannot shoot the player
+   * through the wall it lost them behind.
+   */
+  _updateWeapon(a, dt, playerPos, player) {
+    a.fireCd = Math.max(0, a.fireCd - dt);
+    a.burstPause = Math.max(0, a.burstPause - dt);
+
+    const canEngage = a.stance === STANCE.engage && a._sees && !player?.dead;
+    if (!canEngage) {
+      // Losing sight resets the hesitation, so re-acquiring is not instant.
+      a.reactionT = 0;
+      a.burstLeft = 0;
+      return;
+    }
+
+    const dist = Math.hypot(playerPos.x - a.root.position.x, playerPos.z - a.root.position.z);
+    if (dist > TUNING.maxEngageRange) return;
+
+    if (a.reactionT < a._reaction) { a.reactionT += dt; return; }
+    if (a.burstPause > 0 || a.fireCd > 0) return;
+
+    if (a.burstLeft <= 0) {
+      a.burstLeft = Math.round(TUNING.burstMin +
+        Math.random() * (TUNING.burstMax - TUNING.burstMin));
+    }
+
+    this._fire(a, playerPos);
+    a.burstLeft--;
+    a.fireCd = 60 / TUNING.fireRpm;
+    if (a.burstLeft <= 0) {
+      a.burstPause = TUNING.burstPauseMin +
+        Math.random() * (TUNING.burstPauseMax - TUNING.burstPauseMin);
+    }
+  }
+
+  _fire(a, playerPos) {
+    const engine = this.engine;
+    a.muzzleNode.getWorldPosition(this._muzzle);
+
+    // Aim at the player's centre of mass, then scatter.
+    this._aim.set(playerPos.x, playerPos.y - 0.25, playerPos.z).sub(this._muzzle).normalize();
+    const ang = Math.random() * Math.PI * 2;
+    const rad = Math.sqrt(Math.random()) * TUNING.spread;
+    this._side.set(-this._aim.z, 0, this._aim.x).normalize();
+    this._up.crossVectors(this._side, this._aim).normalize();
+    this._aim.addScaledVector(this._side, Math.cos(ang) * rad)
+      .addScaledVector(this._up, Math.sin(ang) * rad)
+      .normalize();
+
+    engine.modules.get('combat')?.fireShot?.({
+      origin: this._muzzle, dir: this._aim,
+      weapon: { damage: TUNING.damage, muzzleVelocity: TUNING.muzzleVelocity, name: 'AK' },
+      shooter: a,
+    });
+    engine.modules.get('fx')?.muzzleFlash?.(this._muzzle, this._aim, 0.85);
+    engine.modules.get('audio')?.play?.('fire', { position: this._muzzle });
   }
 
   /** Breathing and weapon-ready pose. A perfectly still character reads as a prop. */
