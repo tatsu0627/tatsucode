@@ -147,8 +147,8 @@ export const POST = {
   dof: { enabled: true, focusDistance: 14, aperture: 0.30, maxBlur: 0.0035 },
   grain: { strength: 0.035 },      // subtle; heavy grain reads as a filter, not film
   chromatic: { strength: 0.0016 }, // barely perceptible at the edges only
-  vignette: { strength: 0.34, smoothness: 0.55 },
-  sharpen: { strength: 0.28 },     // counteracts TAA softness
+  vignette: { strength: 0.22, smoothness: 0.6 },
+  sharpen: { strength: 0.14 },     // counteracts TAA softness without ringing thin edges
 };
 
 // Degrees -> the sun's world-space direction, shared by lighting and any shader

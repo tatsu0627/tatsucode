@@ -412,6 +412,26 @@ export function buildLevel(matlib, root) {
     }
   }
 
+  // --- road surface --------------------------------------------------------
+  // The road is a large dark plane and reads as a hole in the frame unless it
+  // carries incident detail. Faded centre line, repair patches, drain covers and
+  // scattered rubble give the eye something to track along it.
+  for (let i = 0; i < 26; i++) {
+    const z = 24 - i * 3.0;
+    if (R() < 0.22) continue;                    // worn away in places
+    b.box('concreteDark', -2, 0.02, z, 0.16, 0.02, 1.7,
+      { bevel: 0, collide: false, dirt: false, tile: 2 });
+  }
+  for (let i = 0; i < 14; i++) {
+    // Repair patches: slightly proud of the surface, irregular sizes.
+    b.box('asphalt', rnd(-6.4, 2.4), 0.026, rnd(-40, 22), rnd(1.2, 3.4), 0.03, rnd(1.0, 2.8),
+      { bevel: 0.02, collide: false, rotY: rnd(-0.2, 0.2), tile: 2 });
+  }
+  for (const [dx, dz] of [[-5.6, 6], [1.4, -9], [-4.2, -24], [0.8, 15]]) {
+    b.instance('drain', 'rusted', () => new THREE.CylinderGeometry(0.34, 0.34, 0.06, 14),
+      mat(dx, 0.03, dz, rnd(0, 3.14)));
+  }
+
   // --- ground variation ----------------------------------------------------
   // A uniform sand plane is the flattest thing in the frame. Patches of exposed
   // asphalt, dust drifts and tyre scars break up the albedo and give the eye
@@ -436,7 +456,7 @@ export function buildLevel(matlib, root) {
   // were so far out the haze erased them completely.
   for (let i = 0; i < 20; i++) {
     const x = rnd(-190, 190);
-    const z = -70 - R() * 120;
+    const z = -125 - R() * 150;
     const w = rnd(30, 90), h = rnd(14, 46);
     b.instance('mesa', 'sand', () => bevelBox(1, 1, 1, 0.06),
       mat(x, h / 2 - 2, z, rnd(0, 6.28), w, h, rnd(24, 60)));
