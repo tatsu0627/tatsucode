@@ -18,7 +18,7 @@ export const SHOTS = {
   // at (15,-4), guard tower at (-1,-34), road running north-south at x=-2.
   // Each vantage needs an unobstructed subject, a foreground element for depth,
   // and something in the far distance for the haze to work on.
-  hero:     { pos: [  7.5, 1.75,  15.0], look: [-11.0, 3.0, -12.0], fov: 65 },
+  hero:     { pos: [  3.0, 1.75,  10.5], look: [-13.0, 3.4, -11.0], fov: 68 },
   street:   { pos: [ -2.0, 1.70,  20.0], look: [ -2.0, 2.2, -34.0], fov: 75 },
   interior: { pos: [ -8.5, 1.70,   1.5], look: [-16.0, 1.8,  -6.0], fov: 80 },
   weapon:   { pos: [  3.0, 1.70,   8.0], look: [ -6.0, 2.0,  -6.0], fov: 80, viewmodel: true },

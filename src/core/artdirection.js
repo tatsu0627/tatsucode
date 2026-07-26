@@ -37,9 +37,9 @@ export const SUN = {
   // Azimuth/elevation in degrees. Low elevation gives long raking shadows and
   // lets the volumetric shafts read against the architecture.
   azimuth: 118,
-  elevation: 13.5,
+  elevation: 10.5,
   color: 0xffd9a8,
-  intensity: 4.2,
+  intensity: 5.2,
   // Shadow cascades: near cascade is tight for viewmodel-adjacent contact
   // shadows, far cascade covers the play space.
   cascades: [8, 24, 70, 180],
@@ -144,7 +144,7 @@ export const POST = {
   bloom: { threshold: 1.15, strength: 0.38, radius: 0.62 },
   ssao: { radius: 0.55, intensity: 1.15, bias: 0.025 },
   motionBlur: { strength: 0.55, samples: 12 },
-  dof: { enabled: true, focusDistance: 12, aperture: 0.9, maxBlur: 0.007 },
+  dof: { enabled: true, focusDistance: 14, aperture: 0.30, maxBlur: 0.0035 },
   grain: { strength: 0.035 },      // subtle; heavy grain reads as a filter, not film
   chromatic: { strength: 0.0016 }, // barely perceptible at the edges only
   vignette: { strength: 0.34, smoothness: 0.55 },

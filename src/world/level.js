@@ -364,16 +364,70 @@ export function buildLevel(matlib, root) {
       mat(x, s * 0.3, z, rnd(0, 6.28), s, s * rnd(0.5, 1.0), s * rnd(0.7, 1.2)));
   }
 
+  // --- perimeter -----------------------------------------------------------
+  // Without this the compound floats in an infinite flat plane, which reads as
+  // a void rather than a place. A defensive berm and wall line close the space,
+  // give every wide shot a horizontal anchor, and stop the eye running off the
+  // edge of the world.
+  const perim = [
+    { x: 0, z: 26, len: 76, axis: 'x' },
+    { x: 0, z: -46, len: 76, axis: 'x' },
+    { x: -34, z: -10, len: 72, axis: 'z' },
+    { x: 34, z: -10, len: 72, axis: 'z' },
+  ];
+  for (const p of perim) {
+    const along = p.axis === 'x';
+    // Earth berm: a low trapezoid, broken up so it never reads as one extrusion.
+    const segs = Math.round(p.len / 6);
+    for (let i = 0; i < segs; i++) {
+      const t = (i - (segs - 1) / 2) * 6;
+      const h = rnd(1.5, 2.3);
+      b.box('sand',
+        along ? p.x + t : p.x, h / 2, along ? p.z : p.z + t,
+        along ? 6.1 : rnd(3.4, 4.2), h, along ? rnd(3.4, 4.2) : 6.1,
+        { bevel: 0.5, rotY: rnd(-0.04, 0.04) });
+    }
+    // Concrete blast wall on top of the two nearest runs only — the far ones
+    // stay bare so the silhouette varies.
+    if (p.z === 26 || p.x === 34) {
+      for (let i = 0; i < segs; i++) {
+        const t = (i - (segs - 1) / 2) * 6;
+        b.box('concreteWarm',
+          along ? p.x + t : p.x, 2.9, along ? p.z : p.z + t,
+          along ? 5.85 : 0.4, 1.9, along ? 0.4 : 5.85,
+          { bevel: 0.04, collide: false });
+      }
+    }
+  }
+
+  // --- ground variation ----------------------------------------------------
+  // A uniform sand plane is the flattest thing in the frame. Patches of exposed
+  // asphalt, dust drifts and tyre scars break up the albedo and give the eye
+  // something to follow across the open ground.
+  for (let i = 0; i < 26; i++) {
+    const x = rnd(-28, 28), z = rnd(-40, 22);
+    b.box(pick(['asphalt', 'concreteDark', 'sand']),
+      x, 0.012, z, rnd(2.5, 9), 0.02, rnd(2.5, 9),
+      { bevel: 0.01, collide: false, rotY: rnd(0, 3.14), tile: 4 });
+  }
+  for (let i = 0; i < 10; i++) {
+    // Tyre scars: long thin dark strips following the road out into the dirt.
+    const x = rnd(-14, 12), z = rnd(-26, 18);
+    const a = rnd(0, 3.14);
+    b.box('asphalt', x, 0.014, z, rnd(6, 16), 0.02, rnd(0.35, 0.6),
+      { bevel: 0, collide: false, rotY: a, tile: 3 });
+  }
+
   // --- distant backdrop ---------------------------------------------------
-  // Mesa silhouettes far to the north. Non-colliding, no shadow cost, purely for
-  // the vista frame's depth read — the haze does the rest.
-  for (let i = 0; i < 14; i++) {
-    const x = rnd(-160, 160);
-    const z = -110 - R() * 90;
-    const w = rnd(24, 70), h = rnd(9, 30);
-    const m = b.instance('mesa', 'sand', () => bevelBox(1, 1, 1, 0.06),
-      mat(x, h / 2, z, rnd(0, 6.28), w, h, rnd(20, 50)));
-    void m;
+  // Mesa silhouettes to the north. Non-colliding, no shadow cost, purely for the
+  // depth read — brought closer and made taller than the first pass, where they
+  // were so far out the haze erased them completely.
+  for (let i = 0; i < 20; i++) {
+    const x = rnd(-190, 190);
+    const z = -70 - R() * 120;
+    const w = rnd(30, 90), h = rnd(14, 46);
+    b.instance('mesa', 'sand', () => bevelBox(1, 1, 1, 0.06),
+      mat(x, h / 2 - 2, z, rnd(0, 6.28), w, h, rnd(24, 60)));
   }
 
   const targets = b.build(root, 'blacksite');
