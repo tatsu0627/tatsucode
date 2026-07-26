@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { bevelBox } from '../world/geo.js';
+import { WEAPON_TEX, tiled } from './textures.js';
+import { bevelBox, worldUV } from '../world/geo.js';
 
 /**
  * Procedural M4-pattern carbine.
@@ -34,6 +35,9 @@ function materials() {
   MATS.polymer = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
     color: 0x33363b, roughness: 0.60, metalness: 0.0,
+    normalMap: tiled(WEAPON_TEX.polymerN, 3),
+    normalScale: new THREE.Vector2(1.0, 1.0),
+    roughnessMap: tiled(WEAPON_TEX.polymerR, 3),
   });
   // Hard-anodised aluminium. Type III anodising is an oxide conversion layer,
   // not bare metal — it is a dielectric coating a few tens of microns thick
@@ -46,6 +50,9 @@ function materials() {
   MATS.alloy = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
     color: 0x3b3e43, roughness: 0.68, metalness: 0.35,
+    normalMap: tiled(WEAPON_TEX.anodisedN, 4),
+    normalScale: new THREE.Vector2(0.8, 0.8),
+    roughnessMap: tiled(WEAPON_TEX.anodisedR, 4),
   });
   // Nitrided barrel steel. This one really is bare metal — melonited steel is
   // a hard, dark, slightly glossy surface — so it keeps its metalness and is
@@ -53,12 +60,18 @@ function materials() {
   MATS.steel = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
     color: 0x24272a, roughness: 0.38, metalness: 0.95,
+    normalMap: tiled(WEAPON_TEX.steelN, 6),
+    normalScale: new THREE.Vector2(0.7, 0.7),
+    roughnessMap: tiled(WEAPON_TEX.steelR, 6),
   });
   // Optic bodies are anodised aluminium as well, and usually flatter than the
   // receiver because they are bead-blasted first.
   MATS.optic = new THREE.MeshStandardMaterial({
     envMapIntensity: VM_ENV,
     color: 0x26292d, roughness: 0.72, metalness: 0.3,
+    normalMap: tiled(WEAPON_TEX.opticN, 5),
+    normalScale: new THREE.Vector2(0.6, 0.6),
+    roughnessMap: tiled(WEAPON_TEX.opticR, 5),
   });
   // Coated lens: strong tint, low roughness, and emissive enough that the
   // reticle reads against a bright desert background.
@@ -75,8 +88,29 @@ function materials() {
   return MATS;
 }
 
+/**
+ * Give a weapon part a UV set.
+ *
+ * bevelBox, cyl and the rest of world/geo.js deliberately emit no UVs — the
+ * level adds them afterwards with a world-space projection so that adjacent
+ * modules share a continuous mapping. The viewmodel cannot use that: it is
+ * parented to the camera, so a world-space projection would swim across the
+ * weapon as the player moves.
+ *
+ * So the same normal-axis planar projection is applied here in the part's own
+ * object space, before the part is placed. That is the correct choice for hard
+ * surfaces anyway — each face gets an undistorted mapping at a true scale, and
+ * there are no seams to hide because the finish is isotropic.
+ *
+ * The tile is 6 cm, matching what weapons/textures.js authors against.
+ */
+function uvProject(geo) {
+  if (!geo.attributes.uv && geo.attributes.normal) worldUV(geo, 0.06);
+  return geo;
+}
+
 function part(parent, geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) {
-  const m = new THREE.Mesh(geo, mat);
+  const m = new THREE.Mesh(uvProject(geo), mat);
   m.position.set(x, y, z);
   m.rotation.set(rx, ry, rz);
   m.castShadow = false;
