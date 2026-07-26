@@ -161,7 +161,10 @@ function pipeRun(b, pts, radius, matKey = 'rusted') {
 }
 
 function cable(b, a, c, sag) {
-  const pts = catenary(new THREE.Vector3(...a), new THREE.Vector3(...c), sag, 16);
+  // catenary() works in plain [x, y, z] arrays; tubeAlong() builds a
+  // CatmullRomCurve3 and needs Vector3s. Converting between the two is not
+  // optional — feeding arrays to the curve throws on p0.x.
+  const pts = catenary(a, c, sag, 16).map(p => new THREE.Vector3(p[0], p[1], p[2]));
   b.place('steelBare', tubeAlong(pts, 0.022, 5, false), [0, 0, 0], [0, 0, 0], [1, 1, 1], { collide: false });
 }
 
