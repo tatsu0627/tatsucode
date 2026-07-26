@@ -178,15 +178,28 @@ export class LightingModule {
     return light;
   }
 
-  setTimeOfDay(t) {
-    const el = Math.sin(t * Math.PI) * 72;
-    const az = 90 + t * 180;
-    const e = (el * Math.PI) / 180, a = (az * Math.PI) / 180;
+  /**
+   * Place the sun by azimuth/elevation in degrees, matching SUN's convention.
+   *
+   * Separate from setTimeOfDay because the two answer different questions:
+   * time-of-day walks a fixed arc, while this addresses the angle directly —
+   * which is what you need to compare candidate sun placements against the
+   * level that was built under them. The compound's street runs between two
+   * tall buildings, and at a low enough sun one of them shadows the entire
+   * vantage; that is a fact about this geometry, not a rendering bug, and the
+   * only way to find the angle that lights it is to try angles.
+   */
+  setSunAngles(azimuthDeg, elevationDeg) {
+    const a = (azimuthDeg * Math.PI) / 180, e = (elevationDeg * Math.PI) / 180;
     this.sunDir.set(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a)).normalize();
     this.sky.setSunDirection(this.sunDir);
     this.shadows.setLightDirection(this.sunDir.clone().negate());
     this._applyAmbient();
     this._buildEnvironment();
+  }
+
+  setTimeOfDay(t) {
+    this.setSunAngles(90 + t * 180, Math.sin(t * Math.PI) * 72);
   }
 
   update() {
