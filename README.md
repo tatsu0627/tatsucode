@@ -83,13 +83,48 @@ Frames are then judged against `docs/visual-standard.md`, which lists the
 specific artifacts that give away amateur real-time rendering and the score
 each axis must reach.
 
+## The match
+
+Deploy from the main menu. The objective is to clear the compound: six hostiles
+hold it, you have three lives, and the mission ends when the garrison is down or
+your lives run out — then it resets for another run.
+
+The garrison fights back. Agents acquire, hesitate, fire a short burst, pause
+and repeat, and only ever shoot with a live line of sight, so breaking contact
+works. An attack-token cap means at most two open fire at once: a squad that all
+shoots at once is not a firefight, it is a death. You regenerate health after a
+lull and get a few seconds of protection on spawn.
+
+Standing in the open under fire costs roughly half your health in seven seconds
+— enough time to react, not enough to ignore.
+
+## Playtesting
+
+Visual review says nothing about whether the game plays, so behaviour is
+verified by driving real input:
+
+```sh
+node tools/playtest.mjs
+```
+
+It presses keys, moves the mouse and clicks, then asserts on engine state:
+that deploying enables the player, that mouse look turns the camera, that
+movement accelerates and decelerates, that collision holds and the player never
+falls out of the world, that firing consumes ammo and resolves shots, that
+reload draws from reserve, that the AI perceives and shoots back without being
+instantly lethal, and that death leads to a redeploy and a cleared garrison
+completes the mission.
+
+Two things about it are load-bearing. Waits are expressed in **engine frames,
+not wall clock** — the software rasteriser can take seconds per frame while the
+engine clamps dt to 1/15 s, so a wall-clock wait can span less than one
+simulated frame and read as a broken game. And it runs with `?nolock=1`, since
+headless Chromium never grants pointer lock and every input path is gated behind
+it.
+
 ## Current state
 
-Every module listed above is implemented and wired. The scene boots, renders
-through the full post chain, and is populated: a garrison of procedurally rigged
-soldiers with perception and stance behaviour, a first-person carbine with
-spring-driven sway and recoil, hitscan combat with per-hitbox multipliers and
-range falloff, pooled particles and decals, and fully synthesised audio.
+Every module listed above is implemented, wired and exercised by the playtest.
 
 Known outstanding issues, stated plainly:
 
