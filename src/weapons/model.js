@@ -18,24 +18,35 @@ import { bevelBox } from '../world/geo.js';
 
 const MATS = {};
 
+// The viewmodel sits under a bright desert sky, and a metal at moderate
+// roughness mirrors that sky hard enough to read as chrome. Real firearm
+// finishes are dark, matte coatings that reflect very little, so the weapon's
+// metals take a strongly reduced environment contribution — otherwise the
+// buffer tube and receiver come out near-white.
+const VM_ENV = 0.28;
+
 function materials() {
   if (MATS.polymer) return MATS;
 
   // Glass-filled nylon: dark, matte, very slightly warm. Never pure black —
   // real polymer always picks up some sheen and a black surface kills the form.
   MATS.polymer = new THREE.MeshStandardMaterial({
+    envMapIntensity: VM_ENV,
     color: 0x33363b, roughness: 0.60, metalness: 0.0,
   });
   // Hard-anodised aluminium: a metal, but a rough one. Type III anodising is
   // matte — a glossy receiver is the classic giveaway of a fake gun model.
   MATS.alloy = new THREE.MeshStandardMaterial({
+    envMapIntensity: VM_ENV,
     color: 0x4a4e54, roughness: 0.42, metalness: 1.0,
   });
   // Nitrided barrel steel, darker and slightly glossier than the receiver.
   MATS.steel = new THREE.MeshStandardMaterial({
+    envMapIntensity: VM_ENV,
     color: 0x2c2f33, roughness: 0.32, metalness: 1.0,
   });
   MATS.optic = new THREE.MeshStandardMaterial({
+    envMapIntensity: VM_ENV,
     color: 0x2a2d31, roughness: 0.48, metalness: 1.0,
   });
   // Coated lens: strong tint, low roughness, and emissive enough that the
