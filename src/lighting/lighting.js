@@ -81,7 +81,9 @@ export class LightingModule {
       this._hemi.color.copy(above);
       this._hemi.groundColor.copy(below);
     }
-    sharedFogUniforms.fogSunDirection?.value?.copy?.(this.sunDir);
+    // Height fog tints warm toward the sun and cool away from it; without this
+    // the inscattering points at a stale default and the haze reads flat.
+    sharedFogUniforms.hfSunDirection.value.copy(this.sunDir);
   }
 
   /** Render the analytic sky into a PMREM cube so metal and glass reflect it. */

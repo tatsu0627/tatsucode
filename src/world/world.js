@@ -38,7 +38,14 @@ export class WorldModule {
     // pure CPU work, so this is most of the difference between a fast and a slow
     // boot.
     const preset = engine.modules.get('render')?.quality?.preset ?? 'ultra';
-    const scale = preset === 'low' ? 0.5 : preset === 'high' ? 0.75 : 1;
+    let scale = preset === 'low' ? 0.5 : preset === 'high' ? 0.75 : 1;
+
+    // Texture synthesis is pure CPU work and dominates startup. The screenshot
+    // harness runs under SwiftShader, where full-resolution generation pushes
+    // boot into the minutes and makes the review loop unusable — so captures
+    // default to half resolution. Override with ?tex=1 for a final quality pass.
+    const params = new URLSearchParams(location.search);
+    if (params.has('shot')) scale = parseFloat(params.get('tex') || '0.5');
 
     this.matlib = new MaterialLibrary(engine.renderer, { scale }).buildAll();
     this.materials = this.matlib.map;
