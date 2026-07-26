@@ -150,10 +150,26 @@ Known outstanding issues, stated plainly:
   ridge to the same value and the difference cannot be seen. The wider plane is
   kept because terrain ending before the backdrop is wrong regardless, not
   because a visible fix was demonstrated.
-- **The concrete texture's dome stamps read as regular dark ellipses** across
-  large flat surfaces — most visible on the interior ceiling and floor, where
-  they look like leopard spots rather than staining. The stamp radius wants
-  reducing and randomising against the tile size.
+- **The atmosphere was drowning the image, and it hid everything else.** The
+  volumetric term ran at density 0.035 with a Henyey-Greenstein anisotropy of
+  0.72. That phase function is 22x the isotropic value looking straight down
+  the light, so the sun-facing case carried 22x the scattering the density had
+  been tuned against side-on. Sweeping the sun across the street vantage
+  (`tools/sunsweep.mjs`) measured the ground at a mean luminance of 196/255
+  with 95% of it above the highlight threshold — a white screen with no
+  geometry in it. Height fog compounded it at a longer range, putting the
+  backdrop ridge at 99.9% opacity. Both are now much thinner (0.012 / g 0.58,
+  and fog 0.010).
+  This matters beyond its own symptom: with the frame washed out, no cast
+  shadow had the contrast to read, so a long hunt through the shadow rig could
+  not have fixed what it was looking for.
+- **Shadows were selecting three's unfiltered path.**
+  `renderer.shadowMap.type` was `PCFSoftShadowMap`, and r185 maps only
+  `PCFShadowMap` and `VSMShadowMap` to a shader define — everything else falls
+  through to `SHADOWMAP_TYPE_BASIC`, one unfiltered depth comparison with
+  `shadow.radius` ignored. It fails quietly: shadows still render, so the rig
+  looks configured. Fixed, along with sizing the normal bias from each
+  cascade's own texel footprint and casting from back faces.
 - **Interior practicals blow out**, reading as a white disc rather than a
   fitting with a hot centre.
 - The HUD is reviewed and is the strongest element in the project — compass
