@@ -312,6 +312,9 @@ export class PlayerModule {
     // so anything reading them saw the constructor's defaults forever.
     this.state.moveIntent = moveIntent;
     this.state.axis = { x: ax, z: az };
+    // Diagnostic: the key set as seen from inside update(), to compare against
+    // the same Input object read externally.
+    this.state.keysSeen = Object.keys(inp.keys).filter(k => inp.keys[k]);
 
     // ---- intents ----------------------------------------------------------
     if (inp.justPressed('crouchToggle')) this._crouchToggle = !this._crouchToggle;
