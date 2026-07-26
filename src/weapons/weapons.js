@@ -248,11 +248,16 @@ export class WeaponsModule {
     this._bloom = Math.max(0, this._bloom - SPEC.spreadBloom * SPEC.spreadDecay * dt);
     this.current.spread = this.spread;
 
+    // Input API: held keys are down(action), edge-triggered are
+    // justPressed(action), and fire/ADS are mouse buttons rather than mapped
+    // key actions. Calling isDown()/pressed() here silently did nothing,
+    // because an optional call on a missing method just yields undefined —
+    // which is why firing never worked and never errored.
     if (p?.enabled && p.input) {
-      const held = p.input.isDown?.('fire') ?? false;
+      const held = !!p.input.mouse?.left;
       if (held) this.fire();
       this._triggerHeld = held;
-      if (p.input.pressed?.('reload')) this.reload();
+      if (p.input.justPressed?.('reload')) this.reload();
     }
 
     if (this.current.reloading) {

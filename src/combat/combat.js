@@ -52,6 +52,13 @@ export class CombatModule {
 
     this._ray.set(origin, dir);
 
+    // Shots from anyone but the player are resolved against the player instead
+    // of against the AI roster — otherwise an agent firing would hit its own
+    // squad and never the person it is shooting at.
+    if (shooter && shooter !== 'player') {
+      return this._resolveAgainstPlayer({ origin, dir, weapon, shooter, world, fx });
+    }
+
     // --- characters --------------------------------------------------------
     let best = null;
     for (const agent of ai?.agents ?? []) {
@@ -103,6 +110,50 @@ export class CombatModule {
     // Nothing hit: still draw the tracer out to its maximum range so the shot
     // reads as having gone somewhere.
     this._end.copy(origin).addScaledVector(dir, 120);
+    this._tracer(fx, origin, this._end, weapon);
+    return null;
+  }
+
+  /**
+   * Resolve an AI shot. The player has no mesh, so it is tested as an upright
+   * box around the camera; the world is traced too and whichever is nearer
+   * wins, so an agent cannot shoot the player through a wall.
+   */
+  _resolveAgainstPlayer({ origin, dir, weapon, shooter, world, fx }) {
+    const player = this.engine.modules.get('player');
+    const targets = world?.raycastTargets ?? [];
+    const worldHit = targets.length ? this._ray.intersectObjects(targets, false)[0] : null;
+
+    let playerHit = null;
+    if (player && !player.dead) {
+      const feet = player.position;
+      this._box.min.set(feet.x - 0.42, feet.y, feet.z - 0.42);
+      this._box.max.set(feet.x + 0.42, feet.y + 1.80, feet.z + 0.42);
+      if (this._ray.ray.intersectBox(this._box, this._point)) {
+        playerHit = { point: this._point.clone(), distance: origin.distanceTo(this._point) };
+      }
+    }
+
+    if (worldHit && (!playerHit || worldHit.distance < playerHit.distance)) {
+      const surface = worldHit.object?.userData?.surface ?? 'concrete';
+      const n = worldHit.face
+        ? this._normal.copy(worldHit.face.normal).transformDirection(worldHit.object.matrixWorld)
+        : this._normal.copy(dir).negate();
+      fx?.impact?.(worldHit.point, n, surface);
+      this._tracer(fx, origin, worldHit.point, weapon);
+      return { kind: 'world', point: worldHit.point, surface, shooter };
+    }
+
+    if (playerHit) {
+      const damage = this._damageAt(weapon?.damage ?? 14, playerHit.distance);
+      // Direction is passed through so the player's flinch and the HUD's
+      // damage indicator both point back at whoever fired.
+      player.applyDamage?.(damage, { direction: dir.clone(), source: shooter });
+      this._tracer(fx, origin, playerHit.point, weapon);
+      return { kind: 'player', damage, shooter, distance: playerHit.distance };
+    }
+
+    this._end.copy(origin).addScaledVector(dir, 90);
     this._tracer(fx, origin, this._end, weapon);
     return null;
   }

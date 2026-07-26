@@ -75,7 +75,7 @@ export class Input {
     });
 
     on(document, 'pointerlockchange', () => {
-      this.locked = document.pointerLockElement === canvas;
+      this.locked = this.lockBypassed || document.pointerLockElement === canvas;
       if (!this.locked) {
         // Releasing the lock must not leave a key or button stuck down.
         for (const k in this.keys) this.keys[k] = false;
@@ -88,11 +88,29 @@ export class Input {
       this.mouse.left = this.mouse.right = false;
     });
     on(canvas, 'wheel', (e) => { this.wheel += Math.sign(e.deltaY); }, { passive: true });
+
+    this._applyLockBypass();
   }
 
   requestLock() {
     if (!this.enabled || !this.canvas) return;
     try { this.canvas.requestPointerLock?.(); } catch { /* headless / denied */ }
+  }
+
+  /**
+   * Headless Chromium will not grant pointer lock, and every input path is
+   * gated behind it — so an automated playtest sees a game that accepts no
+   * input at all. `?nolock=1` treats the lock as already held so the game can
+   * be driven programmatically. It changes nothing for a real player, who gets
+   * the lock on their first click.
+   */
+  _applyLockBypass() {
+    try {
+      if (new URLSearchParams(location.search).get('nolock') === '1') {
+        this.locked = true;
+        this.lockBypassed = true;
+      }
+    } catch { /* no location outside a browser */ }
   }
 
   down(action) { return !!this.keys[action]; }
