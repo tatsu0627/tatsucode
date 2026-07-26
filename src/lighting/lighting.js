@@ -103,7 +103,7 @@ export class LightingModule {
     this.envMap?.dispose?.();
     this.envMap = rt.texture;
     this.engine.scene.environment = this.envMap;
-    this.engine.scene.environmentIntensity = 1.0;
+    this.engine.scene.environmentIntensity = SKY.environmentIntensity;
     pmrem.dispose();
   }
 

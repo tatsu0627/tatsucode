@@ -54,7 +54,13 @@ export const SKY = {
   zenith: 0x6f9fd8,
   horizon: 0xd8c4a4,
   ground: 0x4a3f33,
-  ambientIntensity: 0.85,
+  // Deliberately low. The PMREM environment map generated from this same sky
+  // already supplies image-based ambient; a hemisphere light on top of it
+  // double-counts the ambient term and flattens the image until nothing has a
+  // clear light side and shadow side. This is a small directional fill only.
+  ambientIntensity: 0.25,
+  // How much the IBL contributes. The sun is the key and must dominate.
+  environmentIntensity: 0.7,
   turbidity: 6.2,
   rayleigh: 1.4,
   mieCoefficient: 0.008,

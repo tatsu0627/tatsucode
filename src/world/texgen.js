@@ -283,7 +283,9 @@ function genCorrugated(size) {
   const RIDGES = 13;                       // ~154 mm pitch over a 2 m tile
   const macro = fbm(size, 6, 6, 301);
   const micro = fbm(size, 220, 2, 311);
-  const rustMask = remap(warp(fbm(size, 5, 6, 321), size, fbm(size, 9, 4, 322), fbm(size, 9, 4, 323), size * 0.05), 0.5, 0.72);
+  // Rust reads as weathering only at a fine scale. A low base frequency plus a
+  // strong warp produces huge amoeba-shaped patches that look like a world map.
+  const rustMask = remap(warp(fbm(size, 13, 6, 321), size, fbm(size, 9, 4, 322), fbm(size, 9, 4, 323), size * 0.018), 0.52, 0.80);
   const spangle = fbm(size, 40, 3, 331);   // galvanised zinc crystal mottling
 
   const h = new Float32Array(n);
@@ -317,8 +319,8 @@ function genCorrugated(size) {
   const P = rgbPlanes(n, C.zinc);
   blendMask(P, C.steelDark, spangle, 0.5, -0.35);
   blendMask(P, C.steel, remap(spangle, 0.5, 0.9), 0.55);
-  blendMask(P, C.rust, rustMask, 0.92);
-  blendMask(P, C.rustDark, remap(rustMask, 0.65, 1.0), 0.75);
+  blendMask(P, C.rust, rustMask, 0.55);
+  blendMask(P, C.rustDark, remap(rustMask, 0.72, 1.0), 0.40);
   blendMask(P, C.rustLight, screws, 0.55);
   blendMask(P, C.grime, remap(macro, 0.68, 1.0), 0.3);
   shadeByField(P, height, 0.86, 1.1);
@@ -340,7 +342,9 @@ function genContainer(size) {
   const macro = fbm(size, 5, 6, 401);
   const micro = fbm(size, 200, 2, 411);
   const chalk = fbm(size, 14, 5, 421);
-  const rustMask = remap(warp(fbm(size, 4, 6, 431), size, fbm(size, 8, 4, 432), fbm(size, 8, 4, 433), size * 0.06), 0.48, 0.72);
+  // Kept fine-grained: the per-instance livery colour multiplies this albedo,
+  // so broad dark patches crush to black under a saturated tint.
+  const rustMask = remap(warp(fbm(size, 12, 6, 431), size, fbm(size, 8, 4, 432), fbm(size, 8, 4, 433), size * 0.02), 0.55, 0.82);
 
   const h = new Float32Array(n);
   for (let y = 0, i = 0; y < size; y++) {
@@ -369,8 +373,8 @@ function genContainer(size) {
   const P = rgbPlanes(n, [0.86, 0.86, 0.85]);
   shadeByField(P, chalk, 0.8, 1.05);
   blendMask(P, [0.55, 0.54, 0.52], remap(macro, 0.55, 0.95), 0.4);
-  blendMask(P, C.rust, rustMask, 1.0);
-  blendMask(P, C.rustDark, remap(rustMask, 0.7, 1.0), 0.8);
+  blendMask(P, C.rust, rustMask, 0.50);
+  blendMask(P, C.rustDark, remap(rustMask, 0.78, 1.0), 0.32);
   const runs = new Float32Array(n);
   for (let i = 0; i < 60; i++) stampStreak(runs, size, rnd() * size, rnd() * size * 0.7, 50 + rnd() * 300, 2 + rnd() * 8, 0.85);
   blendMask(P, C.rustLight, runs, 0.4);
