@@ -24,19 +24,19 @@ function materials() {
   // Glass-filled nylon: dark, matte, very slightly warm. Never pure black —
   // real polymer always picks up some sheen and a black surface kills the form.
   MATS.polymer = new THREE.MeshStandardMaterial({
-    color: 0x24262a, roughness: 0.62, metalness: 0.0,
+    color: 0x33363b, roughness: 0.60, metalness: 0.0,
   });
   // Hard-anodised aluminium: a metal, but a rough one. Type III anodising is
   // matte — a glossy receiver is the classic giveaway of a fake gun model.
   MATS.alloy = new THREE.MeshStandardMaterial({
-    color: 0x33363a, roughness: 0.44, metalness: 1.0,
+    color: 0x4a4e54, roughness: 0.42, metalness: 1.0,
   });
   // Nitrided barrel steel, darker and slightly glossier than the receiver.
   MATS.steel = new THREE.MeshStandardMaterial({
-    color: 0x1e2023, roughness: 0.34, metalness: 1.0,
+    color: 0x2c2f33, roughness: 0.32, metalness: 1.0,
   });
   MATS.optic = new THREE.MeshStandardMaterial({
-    color: 0x1a1c1f, roughness: 0.5, metalness: 1.0,
+    color: 0x2a2d31, roughness: 0.48, metalness: 1.0,
   });
   // Coated lens: strong tint, low roughness, and emissive enough that the
   // reticle reads against a bright desert background.

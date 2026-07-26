@@ -105,8 +105,43 @@ export class WeaponsModule {
     // lit by every cascade at once and blows out.
     engine.modules.get('lighting')?.registerObject?.(this.rig);
 
+    this._addViewmodelLights(engine, layer);
+
     this.rig.position.copy(POSE_HIP.pos);
     this.rig.rotation.copy(POSE_HIP.rot);
+  }
+
+  /**
+   * A dedicated key/fill rig for the viewmodel, parented to the camera and
+   * restricted to the viewmodel layer so it never touches the world.
+   *
+   * Real firearm finishes are close to black, and the weapon spends most of its
+   * time facing away from the sun, so leaving it to world lighting alone leaves
+   * it an unreadable silhouette for much of the level. Every first-person game
+   * lights its viewmodel separately for exactly this reason — it is a
+   * readability decision, not a physical one.
+   */
+  _addViewmodelLights(engine, layer) {
+    const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
+    key.position.set(0.6, 0.9, 0.4);          // over the player's left shoulder
+    key.target.position.set(0, -0.2, -1);
+    key.layers.set(layer);
+    key.target.layers.set(layer);
+
+    // Cool fill from below-right stops the underside going to solid black and
+    // separates the magazine and grip from the receiver.
+    const fill = new THREE.DirectionalLight(0x9fb6d8, 0.85);
+    fill.position.set(-0.7, -0.5, 0.6);
+    fill.target.position.set(0, 0, -1);
+    fill.layers.set(layer);
+    fill.target.layers.set(layer);
+
+    // A touch of ambient so no facet is ever fully unlit.
+    const amb = new THREE.AmbientLight(0xb9c4d2, 0.55);
+    amb.layers.set(layer);
+
+    engine.camera.add(key, key.target, fill, fill.target, amb);
+    this._lights = { key, fill, amb };
   }
 
   setVisible(v) {
