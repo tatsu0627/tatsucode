@@ -86,7 +86,8 @@ for (const shot of shots) {
   page.on('pageerror', e => note(String(e)));
   page.on('console', m => { if (m.type() === 'error') note(m.text()); });
 
-  const url = `http://127.0.0.1:${PORT}/?shot=${shot}`;
+  const extra = process.env.SHOOT_PARAMS ? `&${process.env.SHOOT_PARAMS}` : '';
+  const url = `http://127.0.0.1:${PORT}/?shot=${shot}${extra}`;
   try {
     await page.goto(url, { waitUntil: 'load', timeout: 45000 });
     // Convergence is 64 frames through the full post chain. Under SwiftShader
@@ -101,7 +102,7 @@ for (const shot of shots) {
     console.log(`     converged in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
     // A couple of extra frames for anything that converges on __READY__'s heels.
     await page.waitForTimeout(400);
-    const file = `${out}/${shot}.png`;
+    const file = `${out}/${shot}${process.env.SHOOT_SUFFIX || ''}.png`;
     // Read the WebGL canvas directly rather than using page.screenshot(): the
     // headless compositor stalls indefinitely on a continuously-animating
     // canvas under SwiftShader. The engine enables preserveDrawingBuffer in
