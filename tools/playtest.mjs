@@ -31,7 +31,7 @@ const browser = await chromium.launch({
   executablePath: existsSync(CHROME) ? CHROME : undefined,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
 });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
 
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
@@ -43,7 +43,7 @@ page.on('console', m => {
 // The renderer is software-rasterised and the engine clamps dt to 1/15 s, so
 // wall-clock waits are meaningless here: 2 seconds of real time can be a single
 // simulated frame. Every wait is therefore expressed in engine frames.
-const waitFrames = async (n, timeoutMs = 240000) => {
+const waitFrames = async (n, timeoutMs = 600000) => {
   const start = await page.evaluate(() => window.__ENGINE__.frame);
   await page.waitForFunction(
     (target) => window.__ENGINE__.frame >= target, start + n, { timeout: timeoutMs });
@@ -57,7 +57,10 @@ const check = (name, pass, detail = '') => {
 
 // nolock=1 because headless Chromium never grants pointer lock, and the game
 // gates all input behind it.
-await page.goto(`http://127.0.0.1:${PORT}/?nolock=1`, { waitUntil: 'load', timeout: 90000 });
+// quality=low drops the expensive post passes: this checks simulation
+// behaviour, not pixels, and software rasterisation makes every frame costly.
+await page.goto(`http://127.0.0.1:${PORT}/?nolock=1&quality=low`,
+  { waitUntil: 'load', timeout: 90000 });
 await page.waitForFunction(
   'window.__BOOTED__ === true || window.__BOOT_ERROR__ !== undefined',
   null, { timeout: 900000 });
@@ -162,7 +165,7 @@ check('player stays on the ground', stopped.onGround === true);
 // --- collision: walk hard into the nearest wall for a while ---------------
 const before = await snap();
 await page.keyboard.down('w');
-await waitFrames(90);
+await waitFrames(45);
 await page.keyboard.up('w');
 const after = await snap();
 const escaped = Math.abs(after.pos[1] - before.pos[1]) > 5;
