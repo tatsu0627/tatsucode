@@ -75,6 +75,16 @@ varying vec4  vClip;
 ${DEPTH_FADE_GLSL}
 #include <fog_pars_fragment>
 
+  // The height-fog chunk installed by src/lighting/atmosphere.js replaces
+  // three's fog_pars_fragment and declares fogColor but not these, so a shader
+  // written against stock fog fails to compile — which silently killed every
+  // particle, decal and tracer in the game.
+  #ifdef USE_FOG
+    uniform float fogDensity;
+    uniform float fogNear;
+    uniform float fogFar;
+  #endif
+
 void main() {
   float xsec = 1.0 - abs(vUv.x * 2.0 - 1.0);
   xsec = pow(clamp(xsec, 0.0, 1.0), 1.6);

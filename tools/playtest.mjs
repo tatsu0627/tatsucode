@@ -82,6 +82,13 @@ const snap = () => page.evaluate(() => {
     agents: ai.agents.length,
     alive: ai.agents.filter(a => a.alive).length,
     engaged: ai.agents.filter(a => a.stance === 2).length,
+    // Diagnostics: distinguish "input never arrived" from "input arrived but
+    // movement was rejected".
+    locked: !!p.input?.locked,
+    keyForward: !!p.input?.down?.('forward'),
+    wish: p.state.wishDir ? p.state.wishDir.toArray().map(n => +n.toFixed(2)) : null,
+    moveIntent: !!p.state.moveIntent,
+    vel: p.velocity.toArray().map(n => +n.toFixed(2)),
   };
 });
 
@@ -129,7 +136,9 @@ await page.waitForTimeout(1200);
 const stopped = await snap();
 
 const travelled = Math.hypot(moving.pos[0] - look.pos[0], moving.pos[2] - look.pos[2]);
-check('W moves the player', travelled > 0.5, `${travelled.toFixed(2)} m`);
+check('W moves the player', travelled > 0.5,
+  `${travelled.toFixed(2)} m — locked=${moving.locked} key=${moving.keyForward} ` +
+  `wish=${JSON.stringify(moving.wish)} intent=${moving.moveIntent} vel=${JSON.stringify(moving.vel)}`);
 check('player decelerates on release', stopped.speed < Math.max(0.5, moving.speed * 0.5),
   `speed ${moving.speed} -> ${stopped.speed}`);
 check('player stays on the ground', stopped.onGround === true);

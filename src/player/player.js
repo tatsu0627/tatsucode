@@ -267,7 +267,7 @@ export class PlayerModule {
 
   // ---- frame --------------------------------------------------------------
   update(dt, engine) {
-    if (!this.enabled) { this.input.endFrame(); return; }
+    if (!this.enabled) return;   // lateUpdate() still drains the input
     if (dt <= 0) return;
     const T = this.tuning;
 
@@ -577,6 +577,15 @@ export class PlayerModule {
     this._flinch.multiplyScalar(Math.exp(-9 * dt));
 
     this._applyCamera(dt);
+  }
+
+  /**
+   * Edge-triggered input (justPressed) is cleared here rather than at the end of
+   * update(), because the engine runs every module's update() before any
+   * lateUpdate(). Clearing it in update() meant weapons — which registers after
+   * player — never saw a key press at all, so reload could never fire.
+   */
+  lateUpdate() {
     this.input.endFrame();
   }
 
