@@ -108,6 +108,34 @@ const skyFragment = /* glsl */`
   }
 
   // Interleaved gradient noise — cheap, blue-noise-like, kills gradient banding.
+  // ---- procedural cirrus ---------------------------------------------------
+  // Value-noise fbm on a flat-plane projection of the view ray. Cirrus at
+  // altitude is thin and streaky, so the domain is stretched hard along one
+  // axis and the result is sharpened with smoothstep rather than left as soft
+  // fbm, which would read as grey smudge instead of cloud.
+  float hash21( vec2 p ) {
+    p = fract( p * vec2( 233.34, 851.73 ) );
+    p += dot( p, p + 23.45 );
+    return fract( p.x * p.y );
+  }
+
+  float vnoise( vec2 p ) {
+    vec2 i = floor( p ), f = fract( p );
+    f = f * f * ( 3.0 - 2.0 * f );
+    return mix( mix( hash21( i ), hash21( i + vec2( 1.0, 0.0 ) ), f.x ),
+                mix( hash21( i + vec2( 0.0, 1.0 ) ), hash21( i + vec2( 1.0, 1.0 ) ), f.x ), f.y );
+  }
+
+  float cirrus( vec2 p ) {
+    float v = 0.0, a = 0.5;
+    for ( int i = 0; i < 5; i++ ) {
+      v += vnoise( p ) * a;
+      p = p * 2.03 + vec2( 3.1, 1.7 );
+      a *= 0.5;
+    }
+    return v;
+  }
+
   float ign( vec2 p ) {
     return fract( 52.9829189 * fract( dot( p, vec2( 0.06711056, 0.00583715 ) ) ) );
   }
@@ -153,6 +181,27 @@ const skyFragment = /* glsl */`
 
     float horizonMix = smoothstep( -0.045, 0.02, upDot );
     vec3 color = mix( bounce, sky, horizonMix );
+
+    // ---- Cirrus ------------------------------------------------------------
+    // Projected onto a plane at altitude: dividing by upDot makes the bands
+    // converge toward the horizon the way real cloud decks do, instead of
+    // sitting on the sky like wallpaper. Only above the horizon, and faded out
+    // near it so the haze below stays clean.
+    if ( upDot > 0.02 ) {
+      vec2 cp = direction.xz / max( upDot, 0.06 ) * 0.55;
+      cp.x *= 0.42;                                  // stretch into streaks
+      float c = cirrus( cp + vec2( 12.0, 4.0 ) );
+      c = smoothstep( 0.52, 0.86, c );
+      c *= smoothstep( 0.02, 0.30, upDot );          // thin out at the horizon
+      c *= 0.62;
+
+      // Lit from the sun side and slightly translucent, so the deck is not a
+      // flat white cutout.
+      float sunAmt = max( dot( direction, vSunDirection ), 0.0 );
+      vec3 cloudLit = mix( vec3( 0.72, 0.74, 0.79 ), vec3( 1.28, 1.10, 0.92 ),
+                           pow( sunAmt, 2.2 ) );
+      color = mix( color, cloudLit * skyIntensity * 1.35, c );
+    }
 
     // ---- Horizon haze: marry the sky to the height fog ---------------------
     float haze = exp( -max( upDot, 0.0 ) * hazeFalloff );
