@@ -460,15 +460,28 @@ export function buildLevel(matlib, root) {
   }
 
   // --- distant backdrop ---------------------------------------------------
-  // Mesa silhouettes to the north. Non-colliding, no shadow cost, purely for the
-  // depth read — brought closer and made taller than the first pass, where they
-  // were so far out the haze erased them completely.
-  for (let i = 0; i < 20; i++) {
-    const x = rnd(-190, 190);
-    const z = -125 - R() * 150;
-    const w = rnd(30, 90), h = rnd(14, 46);
-    b.instance('mesa', 'sand', () => bevelBox(1, 1, 1, 0.06),
-      mat(x, h / 2 - 2, z, rnd(0, 6.28), w, h, rnd(24, 60)));
+  // A ridge line, not a row of boxes. The previous pass used tall, sparse,
+  // sharp-edged blocks in the sand material, which read as pale buildings
+  // rather than landforms — obvious in the elevated vista frame.
+  //
+  // Three things fix that: the dedicated `backdrop` material (haze-tinted, no
+  // normal map, which would only alias at this range), a much heavier bevel so
+  // the silhouette is rounded rather than architectural, and overlapping
+  // clusters at low height so the eye reads one continuous ridge.
+  for (let i = 0; i < 34; i++) {
+    const x = rnd(-230, 230);
+    const z = -150 - R() * 170;
+    const w = rnd(55, 150), h = rnd(7, 22);
+    b.instance('ridge', 'backdrop', () => bevelBox(1, 1, 1, 0.34),
+      mat(x, h / 2 - 3.5, z, rnd(0, 6.28), w, h, rnd(40, 95)));
+    // A lower shoulder against most of them, so the profile steps instead of
+    // presenting one flat top edge.
+    if (R() < 0.7) {
+      const sh = h * rnd(0.35, 0.6);
+      b.instance('ridge', 'backdrop', () => bevelBox(1, 1, 1, 0.34),
+        mat(x + rnd(-w * 0.5, w * 0.5), sh / 2 - 3.5, z + rnd(-20, 20),
+            rnd(0, 6.28), w * rnd(0.5, 0.85), sh, rnd(30, 70)));
+    }
   }
 
   const targets = b.build(root, 'blacksite');
