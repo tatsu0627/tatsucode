@@ -156,8 +156,12 @@ function barrel(b, x, z, matKey = 'rusted') {
 }
 
 function crate(b, x, z, size = 0.8, rotY = 0) {
-  b.instance('crate', R() < 0.5 ? 'wood' : 'woodPale',
-    () => bevelBox(size, size * 0.82, size * 0.92, 0.02), mat(x, size * 0.41, z, rotY));
+  // Geometry is built once per instance key, so the key has to carry the size —
+  // otherwise every crate silently inherits the dimensions of the first one.
+  const bucket = Math.round(size * 20);
+  b.instance(`crate${bucket}`, R() < 0.5 ? 'wood' : 'woodPale',
+    () => bevelBox(bucket / 20, (bucket / 20) * 0.82, (bucket / 20) * 0.92, 0.02),
+    mat(x, (bucket / 20) * 0.41, z, rotY));
   b.collideBox(x, size * 0.41, z, size, size * 0.82, size * 0.92, rotY);
 }
 
@@ -359,9 +363,14 @@ export function buildLevel(matlib, root) {
     b.box('steelBare', x - 3, 1.3, z, 0.09, 2.6, 0.09, { bevel: 0.015, collide: false });
   }
 
-  // Tarps over a couple of stacks — soft shapes among all the hard boxes.
-  b.box('tarpTan', 12.0, 1.35, 9.3, 3.2, 0.06, 2.6, { rot: [0.06, 0.2, -0.04], bevel: 0.02, collide: false });
-  b.box('tarp', -12.0, 1.0, 8.6, 2.6, 0.06, 2.2, { rot: [-0.05, -0.3, 0.05], bevel: 0.02, collide: false });
+  // Tarps draped over crate stacks — soft shapes among all the hard boxes. They
+  // must sit ON something: a flat panel floating in mid-air reads as a bug.
+  for (const [tx, tz, mkey] of [[12.0, 9.3, 'tarpTan'], [-12.0, 8.6, 'tarp']]) {
+    crate(b, tx - 0.45, tz - 0.3, 0.85, rnd(0, 3.14));
+    crate(b, tx + 0.45, tz + 0.25, 0.85, rnd(0, 3.14));
+    b.box(mkey, tx, 0.76, tz, 2.3, 0.05, 1.9,
+      { rot: [rnd(-0.05, 0.05), rnd(0, 3.14), rnd(-0.05, 0.05)], bevel: 0.02, collide: false });
+  }
 
   // Rubble/debris scatter — small, dense, and irregular. Cheap, and it does more
   // for "this place is used" than another building would.
