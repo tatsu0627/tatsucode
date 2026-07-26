@@ -41,7 +41,7 @@ const SPEC = {
 
 // Rest and sighted poses in camera space. The ADS pose has to put the optic
 // exactly on the camera axis or the sight picture is subtly, persistently wrong.
-const POSE_HIP = { pos: new THREE.Vector3(0.152, -0.132, -0.345), rot: new THREE.Euler(0.02, -0.055, 0.015) };
+const POSE_HIP = { pos: new THREE.Vector3(0.158, -0.138, -0.395), rot: new THREE.Euler(0.02, -0.055, 0.015) };
 const POSE_ADS = { pos: new THREE.Vector3(0.0, -0.196, -0.255), rot: new THREE.Euler(0, 0, 0) };
 const POSE_SPRINT = { pos: new THREE.Vector3(0.195, -0.175, -0.330), rot: new THREE.Euler(-0.22, 0.55, 0.20) };
 
@@ -121,12 +121,14 @@ export class WeaponsModule {
    * lights its viewmodel separately for exactly this reason — it is a
    * readability decision, not a physical one.
    *
-   * The intensities are deliberately far above what the scene uses: the weapon
-   * has to read against a sunlit desert background, and values tuned for the
-   * world left it a black shape in the first two captures.
+   * The intensities sit above what the scene uses, because the weapon has to
+   * read against a sunlit desert background — but only just. Values tuned like
+   * scene lights left it a black shape; pushed too far the other way, the cool
+   * fill washed the polymer stock to near-white and blew the optic bell. These
+   * are the calibrated middle.
    */
   _addViewmodelLights(engine, layer) {
-    const key = new THREE.DirectionalLight(0xffe9cf, 7.5);
+    const key = new THREE.DirectionalLight(0xffe9cf, 3.6);
     key.position.set(0.6, 0.9, 0.4);          // over the player's left shoulder
     key.target.position.set(0, -0.2, -1);
     key.layers.set(layer);
@@ -134,14 +136,14 @@ export class WeaponsModule {
 
     // Cool fill from below-right stops the underside going to solid black and
     // separates the magazine and grip from the receiver.
-    const fill = new THREE.DirectionalLight(0x9fb6d8, 2.4);
+    const fill = new THREE.DirectionalLight(0x9fb6d8, 0.9);
     fill.position.set(-0.7, -0.5, 0.6);
     fill.target.position.set(0, 0, -1);
     fill.layers.set(layer);
     fill.target.layers.set(layer);
 
     // A touch of ambient so no facet is ever fully unlit.
-    const amb = new THREE.AmbientLight(0xb9c4d2, 1.6);
+    const amb = new THREE.AmbientLight(0xb9c4d2, 0.75);
     amb.layers.set(layer);
 
     engine.camera.add(key, key.target, fill, fill.target, amb);
