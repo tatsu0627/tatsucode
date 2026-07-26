@@ -183,6 +183,8 @@ const marchFragment = /* glsl */`
   uniform float uGroundLevel;
   uniform float uExtinction;
   uniform float uStrength;
+  uniform float uInscatterKnee;
+  uniform float uInscatterMax;
   uniform float uFrame;
 
   uniform vec4  uCsmSplits;      // view-axis distance where each cascade ends
@@ -298,7 +300,31 @@ const marchFragment = /* glsl */`
       t += stepLen;
     }
 
-    gl_FragColor = vec4( scattered * uStrength, transmittance );
+    vec3 inscatter = scattered * uStrength;
+
+    // Soft-knee rolloff on the inscatter.
+    //
+    // Single scattering has no upper bound looking down the light: the phase
+    // function peaks, every step along the ray is lit, and the integral just
+    // keeps growing. Measured facing the sun, this saturated roughly a third of
+    // the frame to a flat 254/255 with a standard deviation of 0.4 — not a
+    // bright sky, a white void with no geometry in it. Real air does not do
+    // this because the light that scatters toward you has already been
+    // scattered out of the beam several times over, which single scattering
+    // does not model.
+    //
+    // Rolling the luminance off toward uInscatterMax keeps shafts and haze
+    // untouched below the knee while making "look at the sun" bright rather
+    // than blank. Applied on luminance so the hue of the haze survives.
+    float inLum = dot( inscatter, vec3( 0.2126, 0.7152, 0.0722 ) );
+    if ( inLum > uInscatterKnee ) {
+      float over = inLum - uInscatterKnee;
+      float headroom = max( 1e-4, uInscatterMax - uInscatterKnee );
+      float rolled = uInscatterKnee + over / ( 1.0 + over / headroom );
+      inscatter *= rolled / max( inLum, 1e-4 );
+    }
+
+    gl_FragColor = vec4( inscatter, transmittance );
   }
 `;
 
@@ -349,6 +375,8 @@ export class VolumetricPass {
     this.maxDistance = opts.maxDistance ?? 78.0;
     this.extinction = opts.extinction ?? 0.35;
     this.strength = opts.strength ?? 0.14;
+    this.inscatterKnee = opts.inscatterKnee ?? VOLUMETRIC.inscatterKnee ?? 0.40;
+    this.inscatterMax = opts.inscatterMax ?? VOLUMETRIC.inscatterMax ?? 1.35;
     this.intensity = opts.intensity ?? 1.0;
 
     this._frame = 0;
@@ -399,6 +427,8 @@ export class VolumetricPass {
       uGroundLevel:      { value: FOG.groundLevel },
       uExtinction:       { value: this.extinction },
       uStrength:         { value: this.strength },
+      uInscatterKnee:    { value: this.inscatterKnee },
+      uInscatterMax:     { value: this.inscatterMax },
       uFrame:            { value: 0 },
       uCsmSplits:        { value: new THREE.Vector4(8, 24, 70, 180) },
       uCsmBias:          { value: new THREE.Vector4(0, 0, 0, 0) },
@@ -586,6 +616,8 @@ export class VolumetricPass {
     u.uMaxDistance.value = this.maxDistance;
     u.uExtinction.value = this.extinction;
     u.uStrength.value = this.strength;
+    u.uInscatterKnee.value = this.inscatterKnee;
+    u.uInscatterMax.value = this.inscatterMax;
     u.uFrame.value = this.jitter ? this._frame : 0;
     this.compositeUniforms.uIntensity.value = this.intensity;
 

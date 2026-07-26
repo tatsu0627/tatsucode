@@ -114,6 +114,14 @@ export const VOLUMETRIC = {
   steps: 48,
   jitter: true,             // blue-noise offset, required or banding is visible
   anisotropy: 0.58,
+  // Where the inscatter starts rolling off, and what it asymptotes to. Single
+  // scattering is unbounded looking down the light — the phase function peaks,
+  // every step of the ray is lit, and the integral just grows. Facing the sun
+  // that saturated about a third of the frame to a flat 254/255 (measured sd
+  // 0.4: a white void, not a bright sky). Below the knee nothing changes, so
+  // shafts and haze are untouched.
+  inscatterKnee: 0.40,
+  inscatterMax: 1.35,
 };
 
 // ---------------------------------------------------------------------------
