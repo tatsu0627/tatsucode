@@ -28,6 +28,24 @@ const R = rand(20260726);
 const rnd = (a, b) => a + R() * (b - a);
 const pick = arr => arr[Math.floor(R() * arr.length) % arr.length];
 
+// Spawn points, and the radius around each that must stay clear of props. The
+// player originally spawned inside a crate stack and simply could not walk —
+// the controller was fine, the level was on top of it.
+export const SPAWNS = [
+  { pos: [-2, 1.68, 11], yaw: 0 },
+  { pos: [8, 1.68, 6], yaw: -2.2 },
+  { pos: [-12, 1.68, 4], yaw: 2.6 },
+];
+const SPAWN_CLEARANCE = 2.6;
+
+function clearOfSpawns(x, z, pad = 0) {
+  for (const s of SPAWNS) {
+    const dx = x - s.pos[0], dz = z - s.pos[2];
+    if (dx * dx + dz * dz < (SPAWN_CLEARANCE + pad) ** 2) return false;
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // wall with openings
 // ---------------------------------------------------------------------------
@@ -145,6 +163,7 @@ function container(b, x, y, z, rotY, matKey) {
 }
 
 function barrel(b, x, z, matKey = 'rusted') {
+  if (!clearOfSpawns(x, z, 0.6)) return;
   const g = () => new THREE.CylinderGeometry(0.29, 0.29, 0.88, 16, 1);
   b.instance('barrel', matKey, g, mat(x, 0.44, z, rnd(0, 6.28)));
   // Rolling ribs.
@@ -156,6 +175,7 @@ function barrel(b, x, z, matKey = 'rusted') {
 }
 
 function crate(b, x, z, size = 0.8, rotY = 0) {
+  if (!clearOfSpawns(x, z, size)) return;
   // Geometry is built once per instance key, so the key has to carry the size —
   // otherwise every crate silently inherits the dimensions of the first one.
   const bucket = Math.round(size * 20);
@@ -383,6 +403,7 @@ export function buildLevel(matlib, root) {
     if (Math.abs(x - A.x) < A.w / 2 && Math.abs(z - A.z) < A.d / 2) continue;
     if (Math.abs(x - W.x) < W.w / 2 && Math.abs(z - W.z) < W.d / 2) continue;
     const s = rnd(0.06, 0.26);
+    if (!clearOfSpawns(x, z)) continue;
     b.instance('rubble', pick(['concreteDark', 'concreteWarm', 'rusted']),
       () => bevelBox(1, 0.6, 0.85, 0.12),
       mat(x, s * 0.3, z, rnd(0, 6.28), s, s * rnd(0.5, 1.0), s * rnd(0.7, 1.2)));
@@ -491,8 +512,3 @@ export function buildLevel(matlib, root) {
   return { targets, colliders: b.colliders, tris: b.tris };
 }
 
-export const SPAWNS = [
-  { pos: [-2, 1.68, 14], yaw: Math.PI },
-  { pos: [8, 1.68, 6], yaw: -2.2 },
-  { pos: [-12, 1.68, 4], yaw: 2.6 },
-];
