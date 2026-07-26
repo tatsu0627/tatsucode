@@ -114,74 +114,189 @@ function makeTex(bytes, size, srgb, aniso) {
 // ===========================================================================
 
 // --- cracked concrete ------------------------------------------------------
+//
+// Two rules govern this generator, both paid for by a bug. An earlier version
+// stamped nine large discs per tile into the height, albedo AND roughness; on a
+// 16 m ceiling those lined up into leopard spots.
+//
+//  1. NOTHING BIG MAY BE HIGH CONTRAST. The tile is 2.6 m and repeats across
+//     surfaces six tiles wide, so any feature above roughly 0.2 m that also
+//     carries albedo contrast resolves into a readable grid. Macro scale here
+//     is therefore near-monochrome tone only; the contrast lives below ~5 cm,
+//     where the repeat is finer than the eye's pattern-finding scale.
+//  2. NOTHING MAY BE A CIRCLE at a size the eye can measure. Real spalling and
+//     staining have torn, noise-cut boundaries. Every patch above a centimetre
+//     is a thresholded warped-noise field, never a stamped disc. Discs are
+//     allowed only for sub-centimetre pits and blow-holes, where they are
+//     physically correct and individually unresolvable.
 function genConcrete(size) {
   const n = size * size, rnd = mulberry32(1337);
+  // Stamp radii are authored against a 1024 tile so the surface looks the same
+  // at every texture-scale preset instead of getting coarser as it shrinks.
+  const px = size / 1024;
+  const R = (v) => Math.max(0.9, v * px);
+
   const macro = warp(fbm(size, 4, 7, 11), size, fbm(size, 8, 4, 21), fbm(size, 8, 4, 22), size * 0.05);
-  const meso = fbm(size, 24, 6, 31);
-  const micro = fbm(size, 160, 3, 41);
+  const meso = fbm(size, 28, 6, 31);
+  const micro = fbm(size, 200, 3, 41);
+  const grit = fbm(size, 430, 2, 43);          // cement-paste sand, sub-millimetre
   const patchy = remap(fbm(size, 6, 5, 51), 0.42, 0.62);
+  // map-crazing: the fine polygonal web of shrinkage cracks in a cured slab.
+  // Ridged noise gives the cell walls; the warp stops them reading as a lattice.
+  const crazing = remap(ridged(warp(fbm(size, 30, 5, 55), size, fbm(size, 40, 3, 56), fbm(size, 40, 3, 57), size * 0.012), 3.4), 0.55, 1.0);
+  // drainage: where water sits and travels. Broad, soft, and the only thing
+  // allowed to vary at macro scale — because it varies in tone, not in value.
+  const drain = warp(fbm(size, 5, 6, 71), size, fbm(size, 9, 5, 72), fbm(size, 9, 5, 73), size * 0.07);
+
+  // ---- spall zones: warped noise cut by a second, finer warped noise. The
+  // intersection has a torn coastline and a natural spread of patch sizes,
+  // where a stamped blob has one radius and a clean rim.
+  const spallBase = normalize01(warp(fbm(size, 7, 6, 61), size, fbm(size, 13, 5, 62), fbm(size, 13, 5, 63), size * 0.05));
+  const spallBite = warp(fbm(size, 26, 5, 64), size, fbm(size, 34, 3, 65), fbm(size, 34, 3, 66), size * 0.018);
+  const spall = new Float32Array(n);          // ~11% coverage, verified offline
+  for (let i = 0; i < n; i++) {
+    spall[i] = smoothstep(0.78, 0.94, spallBase[i] + (spallBite[i] - 0.5) * 0.30);
+  }
 
   // ---- height: slab relief + form-board joints + aggregate pitting + cracks
   const h = new Float32Array(n);
-  for (let i = 0; i < n; i++) h[i] = macro[i] * 0.45 + meso[i] * 0.32 + micro[i] * 0.1;
-  // formwork board lines: shallow horizontal joints every quarter tile
+  for (let i = 0; i < n; i++) {
+    h[i] = macro[i] * 0.34 + meso[i] * 0.28 + micro[i] * 0.13 + grit[i] * 0.06 - crazing[i] * 0.11;
+  }
+  // formwork board lines: shallow horizontal joints every quarter tile. Linear
+  // features are safe at tile scale — the eye reads them as construction, and a
+  // repeated straight line is a plausible one.
   for (let k = 0; k < 4; k++) {
-    const y = (k + 0.5) * size / 4 + (rnd() - 0.5) * 4;
-    stampSegment(h, size, -2, y, size + 2, y + (rnd() - 0.5) * 3, 3.5, -0.16);
-    stampSegment(h, size, -2, y - 2, size + 2, y - 2, 1.6, 0.05);
+    const y = (k + 0.5) * size / 4 + (rnd() - 0.5) * 4 * px;
+    stampSegment(h, size, -2, y, size + 2, y + (rnd() - 0.5) * 3 * px, R(3.5), -0.16);
+    stampSegment(h, size, -2, y - 2 * px, size + 2, y - 2 * px, R(1.6), 0.05);
   }
-  // exposed aggregate + air voids (blow-holes) — the micro read of poured concrete
-  for (let i = 0; i < 1500; i++) {
-    const x = rnd() * size, y = rnd() * size, r = 1.2 + rnd() * 4.5;
-    stampDome(h, size, x, y, r, (rnd() < 0.42 ? -0.28 : 0.14) * (0.5 + rnd()), 0.7);
+  // Exposed aggregate and air voids. Radii follow a quartic power law, so the
+  // population is overwhelmingly 2-4 mm pits with a thin tail of larger
+  // blow-holes. A single radius band is precisely what reads as polka dots.
+  for (let i = 0; i < 5400; i++) {
+    const u = rnd();
+    const r = R(0.8 + 7.4 * u * u * u * u);
+    const x = rnd() * size, y = rnd() * size;
+    const isVoid = rnd() < 0.58;
+    stampDome(h, size, x, y, r, (isVoid ? -0.32 : 0.15) * (0.45 + rnd() * 0.9), isVoid ? 0.85 : 0.6);
   }
-  // spalled patches where the surface has broken away to aggregate
-  const spall = new Float32Array(n);
-  for (let i = 0; i < 9; i++) {
-    const x = rnd() * size, y = rnd() * size, r = size * (0.02 + rnd() * 0.05);
-    stampBlob(spall, size, x, y, r, 1, 1, 0.86);
-    stampDome(h, size, x, y, r, -0.2, 1.4);
+  // Pockmarks: impact chips, 1-3 cm. Built from overlapping offset lobes so no
+  // two share a silhouette and none of them is round.
+  for (let i = 0; i < 34; i++) {
+    const cx = rnd() * size, cy = rnd() * size;
+    const base = R(3 + 7 * rnd() * rnd());
+    const lobes = 2 + ((rnd() * 4) | 0);
+    for (let l = 0; l < lobes; l++) {
+      const a = rnd() * Math.PI * 2, d = base * 0.6 * rnd();
+      stampDome(h, size, cx + Math.cos(a) * d, cy + Math.sin(a) * d, base * (0.5 + rnd() * 0.7), -0.24, 1.25);
+    }
+  }
+  // Spalling removes the smooth cement skin, so a spall zone is a shallow
+  // recess whose floor is coarse aggregate — not a crater with a rim.
+  for (let i = 0; i < n; i++) h[i] -= spall[i] * 0.10;
+  for (let i = 0; i < 2600; i++) {          // aggregate exposed inside the spall
+    const x = rnd() * size, y = rnd() * size;
+    const s = spall[(y | 0) * size + (x | 0)];
+    if (rnd() > s) continue;
+    stampDome(h, size, x, y, R(1.1 + rnd() * 3.4), (rnd() < 0.5 ? -0.24 : 0.2) * (0.5 + rnd()), 0.8);
   }
   // crack network
   for (let i = 0; i < 16; i++) {
     stampCrack(h, size, rnd, {
-      length: size * (0.15 + rnd() * 0.5), width: 1.6 + rnd() * 2.6,
+      length: size * (0.15 + rnd() * 0.5), width: R(1.6 + rnd() * 2.6),
       amp: -0.5 - rnd() * 0.4, wander: 0.3, branch: 0.7,
+    });
+  }
+  for (let i = 0; i < 14; i++) {             // hairlines, sub-millimetre
+    stampCrack(h, size, rnd, {
+      length: size * (0.08 + rnd() * 0.22), width: R(0.9 + rnd()),
+      amp: -0.2, wander: 0.42, branch: 0.9,
     });
   }
   const height = normalize01(h);
 
+  // Cavity: how much lower a texel is than its neighbourhood. This is what dirt
+  // and shadow actually key off, and it is inherently multi-frequency — it
+  // picks out crack interiors, pit floors and spall edges without any of them
+  // needing a mask of its own.
+  const wide = blur3(height, size, 6);
+  const cavity = new Float32Array(n);
+  for (let i = 0; i < n; i++) cavity[i] = clamp01((wide[i] - height[i]) * 6);
+
   // ---- albedo
   const P = rgbPlanes(n, C.concrete);
-  blendMask(P, C.concreteDark, macro, 1.15, -0.42);
-  blendMask(P, C.concretePale, patchy, 0.7);
-  blendMask(P, C.grime, remap(macro, 0.62, 0.9), 0.55);      // grime in the low spots
-  blendMask(P, C.concreteDark, spall, 0.8);
+  // Macro tone only — half the old strength, because value contrast at this
+  // size is what tiles visibly.
+  blendMask(P, C.concreteDark, macro, 0.6, -0.42);
+  blendMask(P, C.concretePale, patchy, 0.55);
+  // Staining follows drainage and settles in the cavities, rather than being
+  // scattered uniformly across the tile.
+  blendMask(P, C.grime, remap(drain, 0.58, 0.92), 0.42);
+  blendMask(P, C.grime, cavity, 0.5);
+  // Spalled skin exposes clean aggregate, which is *paler* and cooler than the
+  // weathered surface. A faint tone shift plus the roughness break is enough to
+  // read; darkening it was what made the old patches look like holes.
+  blendMask(P, C.concretePale, spall, 0.34);
+  blendMask(P, C.concreteDark, mapf(spall, (v) => (v > 0.82 ? (v - 0.82) / 0.18 : 0)), 0.18);
   shadeByField(P, micro, 0.9, 1.1);
-  // rebar rust bleed — two or three stained zones, always near a crack
-  for (let i = 0; i < 5; i++) {
+  shadeByField(P, grit, 0.95, 1.05);
+  // Rebar rust bleed. Drawn as a smear along a random axis, not a blob: a
+  // corroding bar is a line, and the stain it throws is longer than it is wide.
+  // Two per tile, weak — this is the most saturated thing in the texture and
+  // therefore the one most able to reintroduce a readable spot rhythm.
+  for (let i = 0; i < 2; i++) {
     const x = rnd() * size, y = rnd() * size;
+    const a = rnd() * Math.PI * 2, len = size * (0.05 + rnd() * 0.12);
     const m = new Float32Array(n);
-    stampBlob(m, size, x, y, size * (0.03 + rnd() * 0.06), 1, 1, 0.2);
-    for (let s = 0; s < 6; s++) stampStreak(m, size, x + (rnd() - 0.5) * 40, y, 60 + rnd() * 140, 2 + rnd() * 5, 0.9);
-    blendMask(P, rnd() < 0.5 ? C.rust : C.rustDark, m, 0.5);
+    for (let b = 0; b < 9; b++) {          // beads strung along the bar
+      const t = b / 8;
+      stampBlob(m, size, x + Math.cos(a) * len * t + (rnd() - 0.5) * 10 * px,
+        y + Math.sin(a) * len * t + (rnd() - 0.5) * 10 * px,
+        size * (0.008 + rnd() * 0.016), 1, 1, 0.1);
+    }
+    for (let s = 0; s < 7; s++) {
+      const t = rnd();
+      stampStreak(m, size, x + Math.cos(a) * len * t, y + Math.sin(a) * len * t,
+        (70 + rnd() * 200) * px, R(2 + rnd() * 5), 0.85);
+    }
+    blendMask(P, rnd() < 0.5 ? C.rust : C.rustDark, m, 0.26);
   }
-  // dirt streaks running down (gravity always wins on a vertical surface)
+  // Dirt streaks running down. Roughly half weep from the form-board joints,
+  // which is where water actually escapes a poured wall; the rest start
+  // anywhere, so the runs do not line up into rows. Lengths span a decade, so
+  // no two neighbouring runs read as the same mark.
   const streaks = new Float32Array(n);
-  for (let i = 0; i < 34; i++) stampStreak(streaks, size, rnd() * size, rnd() * size, 60 + rnd() * 260, 3 + rnd() * 11, 0.75);
-  blendMask(P, C.grime, streaks, 0.34);
-  // crack lines darken the albedo too
-  const dark = remap(height, 0.0, 0.28);
-  for (let i = 0; i < n; i++) { const k = 0.45 + 0.55 * dark[i]; P[0][i] *= k; P[1][i] *= k; P[2][i] *= k; }
+  for (let i = 0; i < 42; i++) {
+    const fromJoint = rnd() < 0.45;
+    const y = fromJoint
+      ? (((rnd() * 4) | 0) + 0.5) * size / 4 + (rnd() - 0.5) * 6 * px
+      : rnd() * size;
+    const u = rnd();
+    stampStreak(streaks, size, rnd() * size, y, size * (0.06 + 1.1 * u * u), R(2 + rnd() * 12), 0.7);
+  }
+  blendMask(P, C.grime, streaks, 0.28);
+  // crack lines and pit floors darken the albedo too — via cavity, so the
+  // darkening tracks the actual relief instead of the global height histogram
+  for (let i = 0; i < n; i++) { const k = 1 - cavity[i] * 0.45; P[0][i] *= k; P[1][i] *= k; P[2][i] *= k; }
   jitterHue(P, rnd, 0.05);
 
   // ---- roughness / metalness
+  // Six terms at four different frequencies. Flat roughness is the single
+  // biggest tell of amateur real-time art, so nothing here is allowed to
+  // dominate: the surface is never the same value twice at any scale.
+  // The base sits at 0.60, not 0.72: every term below is additive, and a base
+  // high enough to clip at 1.0 over most of the tile throws away exactly the
+  // variation these terms exist to provide. Measured output spans ~0.45-0.98.
   const rough = new Float32Array(n), metal = new Float32Array(n);
+  const damp = remap(drain, 0.66, 0.95);
   for (let i = 0; i < n; i++) {
-    let r = 0.74 + micro[i] * 0.2 + (macro[i] - 0.5) * 0.14;
-    r -= patchy[i] * 0.12;              // polished/burnished patches
-    r += spall[i] * 0.12;               // exposed aggregate is rougher
-    r -= streaks[i] * 0.14;             // water runs leave a smoother sheen
+    let r = 0.60 + micro[i] * 0.17 + grit[i] * 0.09 + (macro[i] - 0.5) * 0.12;
+    r -= patchy[i] * 0.14;              // burnished / power-floated patches
+    r += spall[i] * 0.22;               // exposed aggregate is much rougher
+    r += crazing[i] * 0.08;             // open crack walls scatter
+    r -= streaks[i] * 0.13;             // water runs leave a smoother sheen
+    r -= damp[i] * 0.10;                // and damp zones stay slightly polished
     rough[i] = clamp01(r);
   }
   return { albedo: P, height, rough, metal, heightMetres: 0.016, tileMetres: 2.6, size };

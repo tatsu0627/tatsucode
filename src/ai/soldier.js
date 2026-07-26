@@ -72,9 +72,16 @@ export const STANCE_HIP_Y = 0.950;
 export const EYE_LOCAL = new THREE.Vector3(0, 1.655, 0.075);
 
 // Where the hands must be, expressed in the weapon's own space.
+//
+// wristL sits at the REAR of the handguard rather than out on the angled
+// foregrip. That is not a stylistic choice: the biacromial width is 0.38 and
+// the arm is 0.570 long, so with the weapon shouldered on the firing side the
+// support hand can only reach the far foregrip by locking the elbow straight,
+// which is exactly the T-pose stiffness this rig is trying to avoid. Gripping
+// the rear of the handguard keeps the support elbow at a plausible ~60° bend.
 export const WEAPON_ANCHORS = {
   wristR: new THREE.Vector3(0.010, 0.035, -0.052),
-  wristL: new THREE.Vector3(-0.005, 0.120, 0.283),
+  wristL: new THREE.Vector3(-0.004, 0.056, 0.150),
   muzzle: new THREE.Vector3(0, 0.095, 0.545),
   optic: new THREE.Vector3(0, 0.170, 0.090),
   ejectPort: new THREE.Vector3(0.030, 0.100, 0.050),
