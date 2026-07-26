@@ -93,12 +93,21 @@ range falloff, pooled particles and decals, and fully synthesised audio.
 
 Known outstanding issues, stated plainly:
 
-- **Ambient occlusion is weaker than it should be.** GTAO runs and produces
-  occlusion at silhouettes, but not the broad contact shading that grounds
-  objects, and it does not respond to the world-space radius. Two hypotheses
-  were tested and disproved (packed depth-stencil format; radius too small).
-  The remaining suspect is the shared G-buffer handoff — `?aogbuffer=own` makes
-  GTAO render its own normals and depth so the two can be compared.
+- **Ambient occlusion is subtle, and that appears to be correct.** It reads as
+  very little contact shading in the beauty pass, which prompted a hunt through
+  three hypotheses — packed depth-stencil depth format, too small a world
+  radius, and the shared G-buffer handoff. All three were disproved by
+  capturing the occlusion buffer directly (`post=ao`), including running GTAO
+  on its own normals and depth via `?aogbuffer=own`, which produced a
+  near-identical result.
+  Inspecting that buffer closely, the occlusion is present and spatially
+  correct — under the barriers, in the window reveals, around the building base
+  and the crates — just faint. An open desert compound has very few concave
+  corners for ambient light to be occluded in, so physically-based AO genuinely
+  has little to find here; the original expectation was calibrated for
+  interiors. The grounding cue in this scene comes from the sun shadows.
+  If stronger grounding is wanted it should come from deliberately art-directed
+  contact darkening, not from inflating the AO radius.
 - **The sky has no cloud layer**, so wide shots have a large empty gradient.
 - **Distant backdrop geometry is untextured**, relying entirely on haze.
 - The HUD has not yet been visually reviewed.
