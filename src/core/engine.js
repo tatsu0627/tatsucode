@@ -40,7 +40,11 @@ export class Engine {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    // The post chain owns tonemapping: its composite pass applies ACES at the
+    // end, on HDR values. Leaving the renderer's tonemapper on would tonemap
+    // the scene a second time on its way into the HDR buffer, flattening
+    // contrast before the chain ever sees it.
+    this.renderer.toneMapping = THREE.NoToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;

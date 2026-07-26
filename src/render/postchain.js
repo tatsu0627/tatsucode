@@ -159,6 +159,10 @@ export class FullscreenPass extends Pass {
       depthTest: false,
       depthWrite: false,
       blending: THREE.NoBlending,
+      // Post passes operate on values the chain already owns. Leaving this on
+      // makes three inject <tonemapping_pars_fragment>, whose luminance()
+      // collides with the one in our shader library and fails compilation.
+      toneMapped: false,
     });
     this.uniforms = this.material.uniforms;
     this._fsQuad = new FullScreenQuad(this.material);
