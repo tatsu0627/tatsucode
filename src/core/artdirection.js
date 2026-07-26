@@ -36,8 +36,21 @@ export const EXPOSURE = 1.05;
 export const SUN = {
   // Azimuth/elevation in degrees. Low elevation gives long raking shadows and
   // lets the volumetric shafts read against the architecture.
-  azimuth: 118,
-  elevation: 10.5,
+  // The compound's street runs between an 8 m hangar and a 6.5 m admin block
+  // about 20 m apart. Below roughly atan(8/20) = 22 degrees one of them shadows
+  // the entire street, all the time — so every prop's shadow lands inside a
+  // larger shadow and none of them reads, and the frame has no light-and-shade
+  // structure at all. That is what the authored 10.5 degrees produced, and no
+  // amount of shadow-map tuning could have fixed it.
+  //
+  // Measured with tools/sunsweep.mjs, which renders this vantage under several
+  // suns from one boot: at 10.5 degrees 26.5% of the ground read as lit, at 22
+  // it fell to 19.7% (the buildings shadow more of it side-on), at 32 it was
+  // 24% and at 42 it reached 35.8% with readable shadow bands across the road.
+  // 34 keeps the warm low-sun palette and long shadows while clearing the
+  // rooflines.
+  azimuth: 104,
+  elevation: 34,
   color: 0xffd9a8,
   intensity: 5.2,
   // Shadow cascades: near cascade is tight for viewmodel-adjacent contact

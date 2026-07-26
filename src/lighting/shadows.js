@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { CSM } from 'three/addons/csm/CSM.js';
 import { SUN } from '../core/artdirection.js';
 
@@ -32,16 +31,19 @@ import { SUN } from '../core/artdirection.js';
 const DEPTH_BIAS_METRES = 0.03;
 
 // Normal bias is sized from the cascade's own texel footprint, because that is
-// the thing it has to clear. The sun sits at ~10 degrees, so the ground is
-// nearly parallel to the light and the depth of the surface changes by
-// texel / tan(elevation) across a single shadow texel — about 5.4x the texel
-// width. No constant depth bias survives that; offsetting the lookup along the
-// surface normal does, and it has to scale with both the texel size and the
-// PCF kernel's reach.
-const NORMAL_BIAS_TEXELS = 1.6;
+// the thing it has to clear: a surface's depth changes by
+// texel / tan(sunElevation) across a single shadow texel, which no constant
+// depth bias survives. Offsetting the lookup along the surface normal does,
+// and it has to scale with both the texel size and the PCF kernel's reach.
+//
+// These are sized for SUN.elevation ~34 degrees, where that factor is about
+// 1.5x. They were nearly double at the old 10.5-degree sun, where it was 5.4x
+// — which is a reason to keep the sun off the horizon quite apart from how the
+// level reads.
+const NORMAL_BIAS_TEXELS = 1.1;
 // ...but only up to a point. Past this the shadow visibly leaves the object's
 // base, and peter-panning reads as worse than a little acne.
-const MAX_NORMAL_BIAS_METRES = 0.28;
+const MAX_NORMAL_BIAS_METRES = 0.15;
 
 export class SunShadows {
   /**
@@ -83,10 +85,6 @@ export class SunShadows {
       light.color.set(SUN.color);
       light.intensity = SUN.intensity;
       light.shadow.mapSize.set(this.mapSize, this.mapSize);
-      // Render back faces into the shadow map: the classic fix for acne on
-      // closed geometry. Objects the world module marks single-sided still work
-      // because three falls back to the material's own side when shadowSide is
-      // unset — we only set it globally through the material pass.
       light.shadow.camera.near = 1;
       light.shadow.camera.far = 600;
     }
@@ -180,28 +178,21 @@ export class SunShadows {
   }
 
   /**
-   * Give a material the cascade shader injection, and make it cast from its
-   * back faces.
+   * Give a material the cascade shader injection.
    *
-   * shadowSide is the half of the acne fix that bias cannot do. A surface lit
-   * at a grazing angle writes a depth into the shadow map that varies by far
-   * more than any constant bias across one texel, so it shadows itself. Writing
-   * only back faces moves the recorded depth to the far side of the object:
-   * a closed box still occludes correctly, and a ground plane — whose front
-   * face points at the sky — stops appearing in the shadow map at all, so it
-   * cannot self-shadow. The ground is the surface this scene is mostly made of,
-   * and it is the one where a ~10 degree sun makes constant bias hopeless.
+   * Casters deliberately keep three's default front-face shadow rendering.
+   * Back-face casting (`material.shadowSide = BackSide`) is the textbook fix
+   * for self-shadow acne on closed geometry, and it was tried here — but it
+   * moves the recorded depth to the far side of the object, which eats the
+   * shadow from the caster's base outward by that object's own thickness along
+   * the light. At this sun elevation a 1.2 m crate is ~1.8 m thick measured
+   * along the light while casting a shadow only ~1.3 m long, so its shadow was
+   * consumed entirely. Buildings kept theirs; every compact prop lost one.
    *
-   * The cost is that genuinely single-sided caster geometry stops casting.
-   * The level is built from closed boxes (see world/geo.js), so that is a
-   * trade worth making here rather than a general truth.
+   * Acne is handled instead by the texel-sized normal bias in _tuneBias(),
+   * which is what the PCF kernel radii there are matched to.
    */
-  setupMaterial(material) {
-    this.csm.setupMaterial(material);
-    if (material.shadowSide === null || material.shadowSide === undefined) {
-      material.shadowSide = THREE.BackSide;
-    }
-  }
+  setupMaterial(material) { this.csm.setupMaterial(material); }
 
   dispose() { this.csm.remove(); this.csm.dispose(); }
 }
