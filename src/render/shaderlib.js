@@ -40,7 +40,11 @@ vec3 viewFromDepth( const in vec2 uv, const in float depth, const in mat4 invPro
 
 /** Colour space / perceptual helpers. */
 export const GLSL_COLOR = /* glsl */ `
-float luminance( const in vec3 c ) { return dot( c, vec3( 0.2126, 0.7152, 0.0722 ) ); }
+// luminance() is deliberately absent. three injects its own definition into the
+// prefix of every non-raw ShaderMaterial fragment shader — unconditionally, not
+// gated on tonemapping — so declaring one here fails compilation with
+// "function already has a body". Use the injected one; it carries the same
+// Rec.709 weights, sourced from ColorManagement.
 
 vec3 RGBToYCoCg( const in vec3 c ) {
   return vec3(
