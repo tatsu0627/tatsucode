@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
@@ -570,9 +571,7 @@ export class RenderModule {
 
   _renderDebugView(renderer) {
     if (!this._debugQuad) {
-      const { FullScreenQuad } = this._FSQ ?? {};
-      // Lazily import-free: reuse the chain's blit machinery for the simple
-      // cases and a tiny material for the packed ones.
+      // A tiny material that can unpack whichever buffer is being inspected.
       this._debugMaterial = new THREE.ShaderMaterial({
         uniforms: {
           tSrc: { value: null },
@@ -600,10 +599,10 @@ export class RenderModule {
         depthTest: false,
         depthWrite: false,
       });
-      void FullScreenQuad;
-      this._debugQuad = new (Object.getPrototypeOf(this.chain._copyQuad).constructor)(
-        this._debugMaterial,
-      );
+      // Previously this derived the quad class from this.chain._copyQuad, which
+      // the chain only creates lazily on its first blit — so the debug view threw
+      // before it could draw anything. Use the imported class directly.
+      this._debugQuad = new FullScreenQuad(this._debugMaterial);
     }
 
     const u = this._debugMaterial.uniforms;
