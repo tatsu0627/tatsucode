@@ -207,7 +207,10 @@ export function buildLevel(matlib, root) {
   // --- ground ------------------------------------------------------------
   // Sand base, with an asphalt road strip and a concrete apron. Slightly
   // different heights so the edges read as real kerbs rather than decals.
-  b.box('sand', 0, -0.6, -10, 200, 1.2, 200, { bevel: 0, collide: false, tile: 6 });
+  // 800 m, not 200. The backdrop ridge sits out at z -150..-320, and a 200 m
+  // plane ends at z -110 — so the ridge had no ground beneath it and read as
+  // landmass floating in the sky, with the horizon visible underneath.
+  b.box('sand', 0, -0.6, -10, 800, 1.2, 800, { bevel: 0, collide: false, tile: 6 });
   b.box('asphalt', -2, -0.005, -8, 9.5, 0.06, 76, { bevel: 0.02, collide: false, tile: 5 });
   b.box('concrete', 8, -0.01, -4, 14, 0.08, 28, { bevel: 0.02, collide: false, tile: 4 });
   // Kerbs along the road.
