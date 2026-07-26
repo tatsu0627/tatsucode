@@ -109,7 +109,12 @@ Known outstanding issues, stated plainly:
   If stronger grounding is wanted it should come from deliberately art-directed
   contact darkening, not from inflating the AO radius.
 - **The sky has no cloud layer**, so wide shots have a large empty gradient.
-- **Distant backdrop geometry is untextured**, relying entirely on haze.
+- **The concrete texture's dome stamps read as regular dark ellipses** across
+  large flat surfaces — most visible on the interior ceiling and floor, where
+  they look like leopard spots rather than staining. The stamp radius wants
+  reducing and randomising against the tile size.
+- **Interior practicals blow out**, reading as a white disc rather than a
+  fitting with a hot centre.
 - The HUD is reviewed and is the strongest element in the project — compass
   strip with bearing and objective range, killfeed, dynamic crosshair, damage
   numbers, directional damage indicator, low-ammo state, grenade indicator and
