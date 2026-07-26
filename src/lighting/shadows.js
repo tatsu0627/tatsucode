@@ -22,6 +22,11 @@ import { SUN } from '../core/artdirection.js';
  * `shadow.radius * texelSize` and texel size grows with the cascade, shadows
  * naturally soften with distance from the viewer — the cheap PCSS stand-in.
  */
+// Shadow bias, in world metres rather than in whatever normalised unit each
+// cascade's frustum happens to imply.
+const DEPTH_BIAS_METRES = 0.025;
+const MAX_NORMAL_BIAS_METRES = 0.06;
+
 export class SunShadows {
   /**
    * @param {THREE.Camera} camera
@@ -125,15 +130,24 @@ export class SunShadows {
       const shadow = lights[i].shadow;
       const scale = Math.max(1, texel(i) / base);
 
-      // Depth bias lives in normalised light-space depth; the light frustum
-      // depth range is constant across cascades, so scaling by texel ratio
-      // converts the authored value into "same slope tolerance everywhere".
-      shadow.bias = SUN.shadowBias * (1 + (scale - 1) * 0.55);
+      // Both biases were previously scaled by the cascade's texel ratio, which
+      // is ~22x between cascade 0 and cascade 3. That put cascade 3 at roughly
+      // 0.45 m of normal bias and, across a 599 m light frustum, about 3 m of
+      // depth bias — so casters shorter than that lost their shadow entirely
+      // and everything else detached from its base by metres. Measured in a
+      // review: a ~90 px band of lit ground between a wall and its own shadow.
+      //
+      // Depth bias is therefore expressed in METRES and converted per cascade
+      // using that cascade's own depth range, so it stays constant in world
+      // terms however wide the frustum gets.
+      const cam = shadow.camera;
+      const range = Math.max(1, cam.far - cam.near);
+      shadow.bias = -(DEPTH_BIAS_METRES / range);
 
-      // Normal bias is in world units: pushing the receiver out by ~1.5 texels
-      // along its normal is the standard cure for the remaining acne without
-      // detaching contact shadows.
-      shadow.normalBias = SUN.normalBias * scale;
+      // Normal bias stays in world units and is capped. Scaling with texel size
+      // keeps acne away in the far cascades, but past a few centimetres it
+      // costs more contact than it buys.
+      shadow.normalBias = Math.min(SUN.normalBias * scale, MAX_NORMAL_BIAS_METRES);
 
       // Penumbra width in texels. Keep the near cascade tight so contact
       // shadows under crates and sandbags stay crisp, widen further out.
