@@ -10,10 +10,21 @@ import { FULLSCREEN_VERT, GLSL_RECONSTRUCT } from '../shaderlib.js';
  *        excluded from motion blur / DOF / velocity dilation)
  *
  * Velocity is reconstructed from the depth buffer by unprojecting with this
- * frame's (jittered) inverse view-projection and reprojecting with last frame's
- * unjittered view-projection. Keeping the position homogeneous through both
- * transforms means the far plane (sky) reprojects correctly instead of blowing
- * up on the divide.
+ * frame's (jittered) inverse view-projection — jittered because that is what
+ * the depth buffer was rendered with — and then reprojecting the result with
+ * BOTH this frame's and last frame's UNJITTERED view-projections. Keeping the
+ * position homogeneous through the transforms means the far plane (sky)
+ * reprojects correctly instead of blowing up on the divide.
+ *
+ * Projecting the current frame explicitly, rather than taking the fragment's
+ * own vUv as its current position, is the whole point. vUv is where the
+ * fragment landed under this frame's sub-pixel jitter, so differencing it
+ * against an unjittered previous position reports the jitter itself as motion:
+ * a systematic half-pixel of velocity on a completely stationary camera, in a
+ * different direction every frame. That fed motion blur, which smeared a still
+ * frame, and fed TAA's history rejection multiplied by uVelocityBoost, which
+ * made every frame look like ~6 px of movement and stopped the history ever
+ * accumulating — so TAA never resolved any edge.
  *
  * KNOWN LIMITATION: this covers camera motion, which is essentially all of the
  * motion in a first-person shooter, plus an explicit zero for the viewmodel.
@@ -42,6 +53,7 @@ export class VelocityPass {
       uniforms: {
         tDepth: { value: null },
         uInvViewProj: { value: new THREE.Matrix4() },
+        uViewProj: { value: new THREE.Matrix4() },
         uPrevViewProj: { value: new THREE.Matrix4() },
         uScale: { value: 1 },
       },
@@ -49,6 +61,7 @@ export class VelocityPass {
       fragmentShader: /* glsl */ `
         uniform highp sampler2D tDepth;
         uniform mat4 uInvViewProj;
+        uniform mat4 uViewProj;
         uniform mat4 uPrevViewProj;
         uniform float uScale;
         varying vec2 vUv;
@@ -58,11 +71,13 @@ export class VelocityPass {
         void main() {
           float depth = texture2D( tDepth, vUv ).x;
           vec4 worldH = worldFromDepthH( vUv, depth, uInvViewProj );
+          vec4 currClip = uViewProj * worldH;
           vec4 prevClip = uPrevViewProj * worldH;
+          vec2 currUv = ( currClip.xy / currClip.w ) * 0.5 + 0.5;
           vec2 prevUv = ( prevClip.xy / prevClip.w ) * 0.5 + 0.5;
-          vec2 velocity = ( vUv - prevUv ) * uScale;
-          // Guard against the degenerate case behind the previous camera.
-          if ( prevClip.w <= 0.0 ) velocity = vec2( 0.0 );
+          vec2 velocity = ( currUv - prevUv ) * uScale;
+          // Guard against the degenerate case behind either camera.
+          if ( prevClip.w <= 0.0 || currClip.w <= 0.0 ) velocity = vec2( 0.0 );
           gl_FragColor = vec4( velocity, 0.0, 1.0 );
         }
       `,
@@ -107,12 +122,14 @@ export class VelocityPass {
   /**
    * @param {THREE.Texture} depthTexture — from the G-buffer prepass
    * @param {THREE.Matrix4} invViewProj — inverse of this frame's jittered VP
+   * @param {THREE.Matrix4} viewProj — this frame's UNJITTERED VP
    * @param {THREE.Matrix4} prevViewProj — last frame's unjittered VP
    * @param {?THREE.Camera} viewmodelCamera — null to skip the viewmodel tag
    */
-  render(renderer, scene, depthTexture, invViewProj, prevViewProj, viewmodelCamera) {
+  render(renderer, scene, depthTexture, invViewProj, viewProj, prevViewProj, viewmodelCamera) {
     this.material.uniforms.tDepth.value = depthTexture;
     this.material.uniforms.uInvViewProj.value.copy(invViewProj);
+    this.material.uniforms.uViewProj.value.copy(viewProj);
     this.material.uniforms.uPrevViewProj.value.copy(prevViewProj);
 
     renderer.setRenderTarget(this.target);

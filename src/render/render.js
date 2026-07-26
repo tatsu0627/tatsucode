@@ -118,6 +118,7 @@ export class RenderModule {
     this._viewProj = new THREE.Matrix4();
     this._invViewProj = new THREE.Matrix4();
     this._prevViewProj = new THREE.Matrix4();
+    this._viewProjUnjittered = new THREE.Matrix4();
 
     this._prevCamPos = new THREE.Vector3();
     this._prevCamQuat = new THREE.Quaternion();
@@ -576,7 +577,11 @@ export class RenderModule {
 
     this._viewProj.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     this._invViewProj.copy(this._viewProj).invert();
-    if (this._frame === 0) this._prevViewProj.copy(this._viewProj);
+    // The unjittered pair is what motion vectors are measured between. Mixing
+    // a jittered current position with an unjittered previous one reports the
+    // jitter as motion — see the note in passes/velocity.js.
+    this._viewProjUnjittered.multiplyMatrices(this._projUnjittered, camera.matrixWorldInverse);
+    if (this._frame === 0) this._prevViewProj.copy(this._viewProjUnjittered);
 
     const vmCam = this._updateViewmodelCamera(engine, camera, jitterOn);
 
@@ -602,6 +607,7 @@ export class RenderModule {
       scene,
       this.gbuffer.depthTexture,
       this._invViewProj,
+      this._viewProjUnjittered,
       this._prevViewProj,
       vmCam,
     );
