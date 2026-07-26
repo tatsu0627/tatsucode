@@ -18,11 +18,12 @@ import { bevelBox } from '../world/geo.js';
 
 const MATS = {};
 
-// The viewmodel sits under a bright desert sky, and a metal at moderate
-// roughness mirrors that sky hard enough to read as chrome. Real firearm
-// finishes are dark, matte coatings that reflect very little, so the weapon's
-// metals take a strongly reduced environment contribution — otherwise the
-// buffer tube and receiver come out near-white.
+// Real firearm finishes are dark, matte coatings that reflect very little, so
+// the weapon's metals take a strongly reduced environment contribution rather
+// than mirroring the desert sky. (This was introduced believing it explained
+// some near-white blocks beside the weapon in a capture; it did not — those
+// turned out to be sunlit crates in the world behind it. The reduction is kept
+// because it is correct for the material, not because it fixed that.)
 const VM_ENV = 0.28;
 
 function materials() {
