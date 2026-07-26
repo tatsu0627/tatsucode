@@ -25,12 +25,18 @@ export class Engine {
     // Frame-time smoothing so gameplay springs don't explode on a hitch.
     this.maxDelta = 1 / 15;
 
+    // Capture mode reads pixels straight off the canvas via toDataURL, which
+    // requires the drawing buffer to survive past the frame. It costs
+    // performance, so it is only enabled when a screenshot is being taken.
+    const capturing = new URLSearchParams(location.search).has('shot');
+
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: false,          // we resolve AA in the post chain (TAA/SMAA)
       powerPreference: 'high-performance',
       stencil: false,
       depth: true,
+      preserveDrawingBuffer: capturing,
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;

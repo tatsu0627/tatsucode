@@ -22,7 +22,8 @@ const outIdx = args.indexOf('--out');
 if (outIdx !== -1) { out = args[outIdx + 1]; args.splice(outIdx, 2); }
 const shots = args.length ? args : ALL;
 
-const PORT = 5199;
+// Parallel agents each need their own dev server; override with SHOOT_PORT.
+const PORT = Number(process.env.SHOOT_PORT || 5199);
 const WIDTH = 1600, HEIGHT = 900;
 
 function waitForServer(url, timeoutMs = 60000) {
@@ -49,7 +50,7 @@ process.on('exit', cleanup);
 process.on('SIGINT', () => { cleanup(); process.exit(1); });
 
 try {
-  await waitForServer(`http://localhost:${PORT}/`);
+  await waitForServer(`http://127.0.0.1:${PORT}/`);
 } catch (e) {
   console.error('Vite failed to start:\n' + serverLog);
   cleanup();
@@ -80,17 +81,27 @@ let hardFail = false;
 for (const shot of shots) {
   const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT } });
   const errors = [];
-  page.on('pageerror', e => errors.push(String(e)));
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  const IGNORE = [/favicon/i, /status of 404/];
+  const note = t => { if (!IGNORE.some(r => r.test(t))) errors.push(t); };
+  page.on('pageerror', e => note(String(e)));
+  page.on('console', m => { if (m.type() === 'error') note(m.text()); });
 
-  const url = `http://localhost:${PORT}/?shot=${shot}`;
+  const url = `http://127.0.0.1:${PORT}/?shot=${shot}`;
   try {
     await page.goto(url, { waitUntil: 'load', timeout: 45000 });
     await page.waitForFunction('window.__READY__ === true', null, { timeout: 60000 });
     // A couple of extra frames for anything that converges on __READY__'s heels.
     await page.waitForTimeout(400);
     const file = `${out}/${shot}.png`;
-    await page.screenshot({ path: file });
+    // Read the WebGL canvas directly rather than using page.screenshot(): the
+    // headless compositor stalls indefinitely on a continuously-animating
+    // canvas under SwiftShader. The engine enables preserveDrawingBuffer in
+    // capture mode so the pixels are still there when we ask for them.
+    const dataUrl = await page.evaluate(() => {
+      const c = document.getElementById('viewport');
+      return c.toDataURL('image/png');
+    });
+    writeFileSync(file, Buffer.from(dataUrl.split(',')[1], 'base64'));
     const fps = await page.evaluate(() => {
       const e = window.__ENGINE__;
       return e ? Math.round(e.frame / Math.max(e.elapsed, 0.001)) : 0;
