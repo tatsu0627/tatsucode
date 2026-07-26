@@ -141,7 +141,7 @@ export const CAMERA = {
 export const POST = {
   order: ['gbuffer', 'ssao', 'lighting', 'ssr', 'volumetric', 'taa', 'motionblur',
           'bloom', 'dof', 'tonemap', 'grain', 'chromatic', 'vignette', 'sharpen'],
-  bloom: { threshold: 1.15, strength: 0.38, radius: 0.62 },
+  bloom: { threshold: 1.5, strength: 0.28, radius: 0.6 },
   ssao: { radius: 0.55, intensity: 1.15, bias: 0.025 },
   motionBlur: { strength: 0.55, samples: 12 },
   dof: { enabled: true, focusDistance: 14, aperture: 0.30, maxBlur: 0.0035 },

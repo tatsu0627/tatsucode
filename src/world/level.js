@@ -355,7 +355,7 @@ export function buildLevel(matlib, root) {
   for (let i = 0; i < 6; i++) {
     const z = 18.5;
     const x = -18 + i * 6;
-    b.box('chainlink', x, 1.2, z, 6, 2.4, 0.04, { bevel: 0, collide: false, dirt: false });
+    b.box('chainlink', x, 1.2, z, 6, 2.4, 0.04, { bevel: 0, collide: false, dirt: false, tile: 0.55 });
     b.box('steelBare', x - 3, 1.3, z, 0.09, 2.6, 0.09, { bevel: 0.015, collide: false });
   }
 
