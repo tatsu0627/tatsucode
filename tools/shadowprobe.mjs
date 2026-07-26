@@ -194,13 +194,11 @@ const diff = await page.evaluate(async ({ a, b }) => {
 
 console.log(JSON.stringify(state, null, 2));
 console.log('\nshadows on vs off:', JSON.stringify(diff));
-console.log(
-  diff.changedPct < 1
-    ? '=> SHADOWS CONTRIBUTE NOTHING. The rig is configured but not reaching the image.'
-  : diff.deepPct < 2 || diff.sd < diff.meanDelta * 0.8
-    ? '=> A VEIL, NOT SHADOWS. Most of the frame dims by a similar small amount, ' +
-      'which is what filtered self-shadow acne looks like — not cast shadows.'
-    : '=> shadows are casting: a minority of the frame is deeply darkened.');
+console.log(diff.changedPct < 1
+  ? '=> SHADOWS CONTRIBUTE NOTHING. The rig is configured but not reaching the image.'
+  : '=> the shadow map reaches the image. Whether it reaches it as shapes is a ' +
+    'different question — look at the delta image, or run tools/lightprobe.mjs, ' +
+    'which isolates the sun so the shadow term cannot hide behind the ambient.');
 
 writeFileSync(`shots/${SHOT}_shadowon.png`, Buffer.from(before.split(',')[1], 'base64'));
 writeFileSync(`shots/${SHOT}_shadowoff.png`, Buffer.from(after.split(',')[1], 'base64'));

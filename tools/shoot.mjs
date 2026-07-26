@@ -140,9 +140,13 @@ for (const shot of shots) {
   await page.close();
 }
 
+// Report first, close second. browser.close() has hung here under SwiftShader,
+// which used to leave a finished run looking like a stuck one — with the
+// results it had already computed still unwritten.
+writeFileSync(`${out}/report.json`, JSON.stringify(results, null, 2));
+if (hardFail) console.log('\nSCREENSHOT RUN HAD ERRORS — fix before reviewing.');
+else console.log(`\nAll shots clean -> ${out}/`);
+
 await browser.close();
 cleanup();
-
-writeFileSync(`${out}/report.json`, JSON.stringify(results, null, 2));
-if (hardFail) { console.log('\nSCREENSHOT RUN HAD ERRORS — fix before reviewing.'); process.exit(2); }
-console.log(`\nAll shots clean -> ${out}/`);
+process.exit(hardFail ? 2 : 0);

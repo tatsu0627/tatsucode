@@ -73,7 +73,10 @@ export const SKY = {
 // ---------------------------------------------------------------------------
 export const FOG = {
   color: 0xc9b79a,
-  density: 0.016,           // exponential-squared
+  // 0.016 put the far ridge at 99.9% opacity and the compound at ~50% from the
+  // vista camera, which is not haze but a wall. Dust should sit between the
+  // player and the far side of the map, not delete it.
+  density: 0.010,           // exponential-squared
   heightFalloff: 0.055,     // denser near the ground
   groundLevel: -1.0,
   inscatterColor: 0xffcf9b, // sun-facing haze goes warm
@@ -82,10 +85,22 @@ export const FOG = {
 
 export const VOLUMETRIC = {
   enabled: true,
-  density: 0.035,
+  // Density and anisotropy were 0.035 / 0.72, which whited out the entire frame
+  // whenever the sun came near the view axis — measured by sweeping the sun
+  // across the street vantage (tools/sunsweep.mjs): at azimuth 145 the ground's
+  // mean luminance hit 196/255 and 95% of it was above the highlight threshold.
+  // A player turning to face the sun should be dazzled, not blinded into a
+  // white screen with no geometry in it.
+  //
+  // Both terms compound. The Henyey-Greenstein phase function at g=0.72 is 22x
+  // the isotropic value when looking straight down the light, so the sun-facing
+  // case was carrying 22x the scattering of the side-on case that the density
+  // was tuned against. Pulling g to 0.58 takes that peak to about 7.6x, which
+  // still reads as strongly forward-scattering dust.
+  density: 0.012,
   steps: 48,
   jitter: true,             // blue-noise offset, required or banding is visible
-  anisotropy: 0.72,
+  anisotropy: 0.58,
 };
 
 // ---------------------------------------------------------------------------

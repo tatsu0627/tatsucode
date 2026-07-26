@@ -176,6 +176,26 @@ node tools/levelbench.mjs 0.5   # material + geometry build, triangle/draw count
 node tools/probe.mjs            # boot the scene, dump live renderer/lighting state
 ```
 
+The rest exist because looking at frames is unreliable. Over this project,
+eyeballing renders produced several confident, wrong conclusions — shadows
+called working when they were detached by metres, and later called entirely
+absent in a frame where two thirds of the pixels were shadow-affected. These
+turn "does it look right" into a number:
+
+```sh
+node tools/pixels.mjs shots/street.png 300,760,324,784   # luma, spread, warmth
+node tools/crop.mjs   shots/street.png 1050,540,1560,830 2   # crop and magnify
+node tools/shadowprobe.mjs street   # does the shadow map reach the image at all
+node tools/lightprobe.mjs  street   # sun only, so shadows cannot hide in ambient
+node tools/sunsweep.mjs street 118,10.5 145,22   # one vantage, several suns
+```
+
+`lightprobe` is the one that settles arguments. It zeroes the IBL, hemisphere,
+local lights and volumetrics, so anything the sun does not reach goes black and
+both cast shadows and self-shadow acne become impossible to miss — the two are
+nearly indistinguishable in the beauty pass, which is how a scene with no
+readable shadows got through several reviews.
+
 Renderer buffers can be captured directly, which is how the AO problem was
 localised:
 

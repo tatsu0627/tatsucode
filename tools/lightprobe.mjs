@@ -107,6 +107,47 @@ const sunflat = await grab();
 save('sunflat', sunflat);
 stage('sun only, no shadow term');
 
+// Ablations. Each is a runtime property with no shader recompile behind it, so
+// each costs one settle rather than one boot. They exist because "the shadow
+// map reaches the image but no object has a shadow" has two obvious suspects,
+// and guessing between suspects has a poor track record on this project.
+//
+// They run at a raised sun, because at the authored 10.5 degrees a single
+// building shadows the whole vantage and an ablation that fixed casting
+// entirely would still show nothing.
+//
+//   nobias    — normal bias offsets the lookup along the surface normal and is
+//               capped at 0.28 m in the far cascades. If that is eating the
+//               shadow of anything shorter than a wall, this shows it.
+//   frontcast — casters currently write their BACK faces into the shadow map,
+//               the standard fix for acne on closed geometry, which silently
+//               drops any caster that is not closed.
+await page.evaluate(() => {
+  const L = window.__ENGINE__.modules.get('lighting');
+  for (const l of L.shadows.lights) l.shadow.intensity = 1;
+  L.setSunAngles(118, 28);
+});
+await settle(56);
+save('high', await grab());
+stage('raised sun, as shipped');
+
+for (const [name, apply] of [
+  ['high_nobias', `() => {
+    const L = window.__ENGINE__.modules.get('lighting');
+    for (const l of L.shadows.lights) { l.shadow.normalBias = 0; l.shadow.bias = -0.0002; }
+  }`],
+  ['high_frontcast', `() => {
+    window.__ENGINE__.scene.traverse(o => {
+      for (const m of [o.material].flat()) if (m) m.shadowSide = 0; // THREE.FrontSide
+    });
+  }`],
+]) {
+  await page.evaluate(`(${apply})()`);
+  await settle(40);
+  save(name, await grab());
+  stage(name);
+}
+
 const result = await page.evaluate(async ({ a, b, gain }) => {
   const load = async (src) => {
     const img = new Image(); img.src = src; await img.decode();
