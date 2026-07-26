@@ -96,7 +96,10 @@ export class LightingModule {
     const skyScene = new THREE.Scene();
     skyScene.add(this.sky.mesh.clone());
 
-    const rt = pmrem.fromScene(skyScene, 0.04);
+    // fromScene defaults to a far plane of 100; the sky box sits at ±2000, so
+    // the default clips it away entirely and yields a black environment — which
+    // would leave every metal and glass surface reflecting nothing.
+    const rt = pmrem.fromScene(skyScene, 0.04, 0.1, 10000);
     this.envMap?.dispose?.();
     this.envMap = rt.texture;
     this.engine.scene.environment = this.envMap;

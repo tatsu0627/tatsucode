@@ -27,8 +27,24 @@ engine.add('audio', new AudioModule());
 engine.add('ui', new UiModule());
 engine.add('render', new RenderModule());
 
-await engine.init();
-installCaptureMode(engine);
-engine.start();
-
 window.__ENGINE__ = engine;
+
+// A top-level await that rejects leaves a blank page and an unhandled rejection
+// with no usable stack, which is the worst possible failure mode for a scene
+// that takes a while to boot. Catch it, surface it on screen, and record it
+// where the screenshot harness can read it.
+try {
+  await engine.init();
+  installCaptureMode(engine);
+  engine.start();
+  window.__BOOTED__ = true;
+} catch (err) {
+  window.__BOOT_ERROR__ = { message: String(err && err.message || err), stack: String(err && err.stack || '') };
+  console.error('boot failed:', err);
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'position:fixed;inset:0;margin:0;padding:24px;background:#140a0a;' +
+    'color:#ff9c8a;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap;z-index:9999;overflow:auto';
+  pre.textContent = `boot failed\n\n${window.__BOOT_ERROR__.stack || window.__BOOT_ERROR__.message}`;
+  document.body.appendChild(pre);
+  throw err;
+}

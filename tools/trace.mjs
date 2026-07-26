@@ -45,7 +45,15 @@ page.on('console', m => {
 });
 
 await page.goto(`http://127.0.0.1:${PORT}/?shot=${shot}`, { waitUntil: 'load', timeout: 60000 });
-await page.waitForTimeout(15000);
+// Boot can take a while under SwiftShader (CSM injects into every material and
+// shader compilation dominates), so wait for a definite outcome rather than a
+// fixed sleep.
+await page.waitForFunction(
+  'window.__BOOTED__ === true || window.__BOOT_ERROR__ !== undefined',
+  null, { timeout: 600000 }).catch(() => console.log('(neither boot nor error within 10min)'));
+
+const boot = await page.evaluate(() => window.__BOOT_ERROR__ || null).catch(() => null);
+if (boot) { console.log('\n=== BOOT ERROR ==='); console.log(boot.stack || boot.message); }
 
 const state = await page.evaluate(() => {
   const e = window.__ENGINE__;
