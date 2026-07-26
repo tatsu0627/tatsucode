@@ -41,9 +41,9 @@ const SPEC = {
 
 // Rest and sighted poses in camera space. The ADS pose has to put the optic
 // exactly on the camera axis or the sight picture is subtly, persistently wrong.
-const POSE_HIP = { pos: new THREE.Vector3(0.128, -0.115, -0.235), rot: new THREE.Euler(0.02, -0.055, 0.015) };
-const POSE_ADS = { pos: new THREE.Vector3(0.0, -0.1215, -0.175), rot: new THREE.Euler(0, 0, 0) };
-const POSE_SPRINT = { pos: new THREE.Vector3(0.165, -0.150, -0.210), rot: new THREE.Euler(-0.22, 0.55, 0.20) };
+const POSE_HIP = { pos: new THREE.Vector3(0.152, -0.132, -0.345), rot: new THREE.Euler(0.02, -0.055, 0.015) };
+const POSE_ADS = { pos: new THREE.Vector3(0.0, -0.196, -0.255), rot: new THREE.Euler(0, 0, 0) };
+const POSE_SPRINT = { pos: new THREE.Vector3(0.195, -0.175, -0.330), rot: new THREE.Euler(-0.22, 0.55, 0.20) };
 
 /** Damped spring step toward a target. Carries velocity, so it settles. */
 function spring(cur, vel, target, stiffness, damping, dt) {

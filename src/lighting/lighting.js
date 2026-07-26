@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { SUN, SKY, VOLUMETRIC, sunDirection } from '../core/artdirection.js';
+import { SUN, SKY, VOLUMETRIC, CAMERA, sunDirection } from '../core/artdirection.js';
 import { PhysicalSky, skyAmbientColors } from './sky.js';
 import { SunShadows } from './shadows.js';
 import { installHeightFog, sharedFogUniforms, syncFogDefaults } from './atmosphere.js';
@@ -68,6 +68,7 @@ export class LightingModule {
     }
 
     this._addLocalLights(scene);
+    this._enableViewmodelLayer();
     syncFogDefaults();
   }
 
@@ -131,6 +132,19 @@ export class LightingModule {
       scene.add(l);
       this.locals.push(l);
     }
+  }
+
+  /**
+   * Lights only illuminate objects whose layers intersect their own. The
+   * viewmodel lives on its own layer so it cannot clip into world geometry,
+   * which means every light has to opt into that layer explicitly or the
+   * weapon renders as an unlit black silhouette.
+   */
+  _enableViewmodelLayer() {
+    const layer = CAMERA.viewmodelLayer ?? 1;
+    const lights = [...(this.shadows?.lights ?? []), ...this.locals];
+    if (this._hemi) lights.push(this._hemi);
+    for (const l of lights) l.layers.enable(layer);
   }
 
   /**
