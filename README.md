@@ -110,7 +110,14 @@ Known outstanding issues, stated plainly:
   contact darkening, not from inflating the AO radius.
 - **The sky has no cloud layer**, so wide shots have a large empty gradient.
 - **Distant backdrop geometry is untextured**, relying entirely on haze.
-- The HUD has not yet been visually reviewed.
+- The HUD is reviewed and is the strongest element in the project — compass
+  strip with bearing and objective range, killfeed, dynamic crosshair, damage
+  numbers, directional damage indicator, low-ammo state, grenade indicator and
+  equipment readout, all in tight condensed type with restrained colour.
+  Note that reviewing it at all required `SHOOT_DOM=1`: the default capture
+  path reads the WebGL drawing buffer, which cannot see a DOM overlay, so the
+  HUD was invisible in every earlier capture regardless of what the UI module
+  did.
 
 ### Debugging tools
 
@@ -129,6 +136,9 @@ localised:
 ```sh
 SHOOT_PARAMS='post=ao' SHOOT_SUFFIX='_ao' node tools/shoot.mjs hero
 # post=ao | normal | depth | velocity | scene
+
+# The HUD is a DOM overlay and is invisible to the default canvas capture.
+SHOOT_DOM=1 SHOOT_PARAMS='hud=1' SHOOT_SUFFIX='_hud' node tools/shoot.mjs weapon
 ```
 
 ## Honest limitations
