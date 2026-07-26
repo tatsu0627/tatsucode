@@ -142,7 +142,7 @@ export const POST = {
   order: ['gbuffer', 'ssao', 'lighting', 'ssr', 'volumetric', 'taa', 'motionblur',
           'bloom', 'dof', 'tonemap', 'grain', 'chromatic', 'vignette', 'sharpen'],
   bloom: { threshold: 1.5, strength: 0.28, radius: 0.6 },
-  ssao: { radius: 1.1, intensity: 1.45, bias: 0.025 },
+  ssao: { radius: 2.5, intensity: 1.6, bias: 0.025 },
   motionBlur: { strength: 0.55, samples: 12 },
   dof: { enabled: true, focusDistance: 14, aperture: 0.30, maxBlur: 0.0035 },
   grain: { strength: 0.035 },      // subtle; heavy grain reads as a filter, not film
