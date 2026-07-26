@@ -9,12 +9,12 @@ import * as THREE from 'three';
 import { MaterialLibrary } from '../src/world/materials.js';
 import { buildLevel } from '../src/world/level.js';
 
-// buildAll() is skipped: the decal atlas needs a canvas, which Node has no
-// business providing. buildLevel pulls materials in lazily through get(), and
-// it is geometry construction we are timing here.
+// The library degrades gracefully without a DOM (the decal atlas is skipped),
+// so the full build runs here — which matters, because the level references
+// materials that only buildAll() registers.
 let t = performance.now();
-const ml = new MaterialLibrary(null, { scale: parseFloat(process.argv[2] || '0.5') });
-console.log(`materials  ${(performance.now() - t).toFixed(0)}ms (lazy)`);
+const ml = new MaterialLibrary(null, { scale: parseFloat(process.argv[2] || '0.5') }).buildAll();
+console.log(`materials  ${(performance.now() - t).toFixed(0)}ms`);
 
 t = performance.now();
 const root = new THREE.Group();

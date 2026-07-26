@@ -581,7 +581,7 @@ function genPlasterBrick(size) {
   const COLS = 10, ROWS = 32;                    // 0.24 x 0.075 m at a 2.4 m tile
   const macro = fbm(size, 5, 6, 901);
   const micro = fbm(size, 190, 3, 911);
-  const plasterMask = remap(warp(fbm(size, 5, 6, 921), size, fbm(size, 10, 4, 922), fbm(size, 10, 4, 923), size * 0.05), 0.4, 0.55);
+  const plasterMask = remap(warp(fbm(size, 11, 6, 921), size, fbm(size, 10, 4, 922), fbm(size, 10, 4, 923), size * 0.02), 0.34, 0.70);
 
   const brickH = new Float32Array(n), brickTone = new Float32Array(n), mortarM = new Float32Array(n);
   for (let y = 0, i = 0; y < size; y++) {

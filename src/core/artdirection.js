@@ -58,7 +58,7 @@ export const SKY = {
   // already supplies image-based ambient; a hemisphere light on top of it
   // double-counts the ambient term and flattens the image until nothing has a
   // clear light side and shadow side. This is a small directional fill only.
-  ambientIntensity: 0.25,
+  ambientIntensity: 0.34,
   // How much the IBL contributes. The sun is the key and must dominate.
   environmentIntensity: 0.7,
   turbidity: 6.2,
@@ -73,11 +73,11 @@ export const SKY = {
 // ---------------------------------------------------------------------------
 export const FOG = {
   color: 0xc9b79a,
-  density: 0.0075,          // exponential-squared
+  density: 0.016,           // exponential-squared
   heightFalloff: 0.055,     // denser near the ground
   groundLevel: -1.0,
   inscatterColor: 0xffcf9b, // sun-facing haze goes warm
-  inscatterStrength: 0.55,
+  inscatterStrength: 0.7,
 };
 
 export const VOLUMETRIC = {
@@ -101,7 +101,7 @@ export const PALETTE = {
   steel:        0x8a8f94,
   paintedGreen: 0x5a6350,
   paintedTan:   0xa8916b,
-  asphalt:      0x3f3d3c,
+  asphalt:      0x565350,
   woodCrate:    0x9b7a4e,
   sandbag:      0xa89573,
   glass:        0x2a3238,

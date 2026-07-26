@@ -172,7 +172,15 @@ export class MaterialLibrary {
     return t;
   }
 
+  /**
+   * The decal atlas is drawn with canvas2d, which only exists in a browser.
+   * Returning null without one lets the whole material library be constructed
+   * in plain Node — which is what makes the offline geometry benchmark in
+   * tools/levelbench.mjs possible, and that has been the fastest way to catch
+   * level-construction faults without waiting on a headless render.
+   */
   decalTexture() {
+    if (typeof document === 'undefined') return null;
     if (!this._decalTex) this._decalTex = buildDecalAtlas();
     return this._decalTex;
   }

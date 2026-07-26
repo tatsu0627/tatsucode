@@ -81,6 +81,18 @@ function wall(b, matKey, opts) {
         along ? o.width : thick, h, along ? thick : o.width,
         { bevel: 0.03 });
     }
+    // Recessed dark pane. Without it an opening reads as a flat bright hole
+    // punched in the wall, because whatever lies beyond is lit exterior. A
+    // near-black plane set back in the reveal is what sells "interior" at
+    // distance, and it costs one quad.
+    if (o.void !== false) {
+      const c = o.at;
+      const oh = top - bottom;
+      b.box('void',
+        along ? x + c : x, base + bottom + oh / 2, along ? z : z + c,
+        along ? o.width - 0.06 : thick * 0.35, oh - 0.06, along ? thick * 0.35 : o.width - 0.06,
+        { bevel: 0.01, collide: false, dirt: false });
+    }
     cursor = right;
   }
   solidSpan(cursor, half);
