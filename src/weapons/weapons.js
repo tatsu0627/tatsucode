@@ -120,9 +120,13 @@ export class WeaponsModule {
    * it an unreadable silhouette for much of the level. Every first-person game
    * lights its viewmodel separately for exactly this reason — it is a
    * readability decision, not a physical one.
+   *
+   * The intensities are deliberately far above what the scene uses: the weapon
+   * has to read against a sunlit desert background, and values tuned for the
+   * world left it a black shape in the first two captures.
    */
   _addViewmodelLights(engine, layer) {
-    const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
+    const key = new THREE.DirectionalLight(0xffe9cf, 7.5);
     key.position.set(0.6, 0.9, 0.4);          // over the player's left shoulder
     key.target.position.set(0, -0.2, -1);
     key.layers.set(layer);
@@ -130,14 +134,14 @@ export class WeaponsModule {
 
     // Cool fill from below-right stops the underside going to solid black and
     // separates the magazine and grip from the receiver.
-    const fill = new THREE.DirectionalLight(0x9fb6d8, 0.85);
+    const fill = new THREE.DirectionalLight(0x9fb6d8, 2.4);
     fill.position.set(-0.7, -0.5, 0.6);
     fill.target.position.set(0, 0, -1);
     fill.layers.set(layer);
     fill.target.layers.set(layer);
 
     // A touch of ambient so no facet is ever fully unlit.
-    const amb = new THREE.AmbientLight(0xb9c4d2, 0.55);
+    const amb = new THREE.AmbientLight(0xb9c4d2, 1.6);
     amb.layers.set(layer);
 
     engine.camera.add(key, key.target, fill, fill.target, amb);
