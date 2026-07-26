@@ -47,7 +47,17 @@ export class Engine {
     this.renderer.toneMapping = THREE.NoToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PCFShadowMap, NOT PCFSoftShadowMap. r185 only maps PCFShadowMap and
+    // VSMShadowMap to a define; every other value — including
+    // PCFSoftShadowMap — falls through to SHADOWMAP_TYPE_BASIC, which is one
+    // unfiltered depth comparison with no kernel and no `shadow.radius`. It
+    // fails silently: shadows still render, so the rig looks configured, but
+    // at a 10.5-degree sun the per-texel acne on ground planes averages out to
+    // a flat ~13/255 veil over the whole frame and no shadow has a readable
+    // shape. PCFShadowMap is the Vogel-disk path (5 hardware-PCF taps rotated
+    // per pixel by interleaved gradient noise) that src/lighting/shadows.js
+    // tunes its radii against.
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.autoClear = false;
 
     this.scene = new THREE.Scene();

@@ -21,11 +21,27 @@ import { SUN } from '../core/artdirection.js';
  * penumbra is dithered rather than banded. Because the kernel radius is
  * `shadow.radius * texelSize` and texel size grows with the cascade, shadows
  * naturally soften with distance from the viewer — the cheap PCSS stand-in.
+ *
+ * All of that depends on `renderer.shadowMap.type === THREE.PCFShadowMap`.
+ * r185 has no define for PCFSoftShadowMap and silently falls back to a single
+ * unfiltered tap, which makes every radius here dead code. See
+ * `src/core/engine.js`.
  */
 // Shadow bias, in world metres rather than in whatever normalised unit each
 // cascade's frustum happens to imply.
-const DEPTH_BIAS_METRES = 0.025;
-const MAX_NORMAL_BIAS_METRES = 0.06;
+const DEPTH_BIAS_METRES = 0.03;
+
+// Normal bias is sized from the cascade's own texel footprint, because that is
+// the thing it has to clear. The sun sits at ~10 degrees, so the ground is
+// nearly parallel to the light and the depth of the surface changes by
+// texel / tan(elevation) across a single shadow texel — about 5.4x the texel
+// width. No constant depth bias survives that; offsetting the lookup along the
+// surface normal does, and it has to scale with both the texel size and the
+// PCF kernel's reach.
+const NORMAL_BIAS_TEXELS = 1.6;
+// ...but only up to a point. Past this the shadow visibly leaves the object's
+// base, and peter-panning reads as worse than a little acne.
+const MAX_NORMAL_BIAS_METRES = 0.28;
 
 export class SunShadows {
   /**
@@ -124,36 +140,31 @@ export class SunShadows {
       const cam = lights[i].shadow.camera;
       return (cam.right - cam.left) / this.mapSize;
     };
-    const base = Math.max(texel(0), 1e-6);
 
     for (let i = 0; i < lights.length; i++) {
       const shadow = lights[i].shadow;
-      const scale = Math.max(1, texel(i) / base);
+      const texelM = texel(i);
 
-      // Both biases were previously scaled by the cascade's texel ratio, which
-      // is ~22x between cascade 0 and cascade 3. That put cascade 3 at roughly
-      // 0.45 m of normal bias and, across a 599 m light frustum, about 3 m of
-      // depth bias — so casters shorter than that lost their shadow entirely
-      // and everything else detached from its base by metres. Measured in a
-      // review: a ~90 px band of lit ground between a wall and its own shadow.
-      //
-      // Depth bias is therefore expressed in METRES and converted per cascade
+      // Penumbra width in texels. Keep the near cascade tight so contact
+      // shadows under crates and sandbags stay crisp, widen further out. Set
+      // before the normal bias, which has to clear the kernel's whole reach.
+      shadow.radius = i === 0 ? 1.35 : 1.35 + i * 0.55;
+
+      // Depth bias is expressed in METRES and converted per cascade
       // using that cascade's own depth range, so it stays constant in world
       // terms however wide the frustum gets.
       const cam = shadow.camera;
       const range = Math.max(1, cam.far - cam.near);
       shadow.bias = -(DEPTH_BIAS_METRES / range);
 
-      // Normal bias stays in world units and is capped. Scaling with texel size
-      // keeps acne away in the far cascades, but past a few centimetres it
-      // costs more contact than it buys.
-      shadow.normalBias = Math.min(SUN.normalBias * scale, MAX_NORMAL_BIAS_METRES);
-
-      // Penumbra width in texels. Keep the near cascade tight so contact
-      // shadows under crates and sandbags stay crisp, widen further out.
-      shadow.radius = i === 0 ? 1.35 : 1.35 + i * 0.85;
-
-      shadow.needsUpdate = true;
+      // The lookup is offset along the surface normal by enough to clear the
+      // PCF kernel's own footprint, which is what actually decides how far a
+      // neighbouring texel's depth can be from this fragment's. SUN.normalBias
+      // is the floor, so the art bible can still ask for more contact softening
+      // than the geometry strictly needs.
+      shadow.normalBias = Math.min(
+        Math.max(SUN.normalBias, texelM * (shadow.radius + 1) * NORMAL_BIAS_TEXELS),
+        MAX_NORMAL_BIAS_METRES);
     }
   }
 
@@ -168,7 +179,29 @@ export class SunShadows {
     this.csm.update();
   }
 
-  setupMaterial(material) { this.csm.setupMaterial(material); }
+  /**
+   * Give a material the cascade shader injection, and make it cast from its
+   * back faces.
+   *
+   * shadowSide is the half of the acne fix that bias cannot do. A surface lit
+   * at a grazing angle writes a depth into the shadow map that varies by far
+   * more than any constant bias across one texel, so it shadows itself. Writing
+   * only back faces moves the recorded depth to the far side of the object:
+   * a closed box still occludes correctly, and a ground plane — whose front
+   * face points at the sky — stops appearing in the shadow map at all, so it
+   * cannot self-shadow. The ground is the surface this scene is mostly made of,
+   * and it is the one where a ~10 degree sun makes constant bias hopeless.
+   *
+   * The cost is that genuinely single-sided caster geometry stops casting.
+   * The level is built from closed boxes (see world/geo.js), so that is a
+   * trade worth making here rather than a general truth.
+   */
+  setupMaterial(material) {
+    this.csm.setupMaterial(material);
+    if (material.shadowSide === null || material.shadowSide === undefined) {
+      material.shadowSide = THREE.BackSide;
+    }
+  }
 
   dispose() { this.csm.remove(); this.csm.dispose(); }
 }

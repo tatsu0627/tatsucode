@@ -32,6 +32,8 @@ export function createCompositePass() {
       uVignetteSmooth: { value: 0.55 },
       uContrast: { value: 1.0 },
       uSaturation: { value: 1.0 },
+      uShadowLift: { value: 0.0 },
+      uShadowTint: { value: new THREE.Color(1, 1, 1) },
       uTime: { value: 0 },
       uDither: { value: 0 },
     },
@@ -45,6 +47,8 @@ export function createCompositePass() {
       uniform float uVignetteSmooth;
       uniform float uContrast;
       uniform float uSaturation;
+      uniform float uShadowLift;
+      uniform vec3 uShadowTint;
       uniform float uTime;
       uniform float uDither;
       varying vec2 vUv;
@@ -74,6 +78,15 @@ export function createCompositePass() {
           );
         } else {
           color = tonemapAt( uv );
+        }
+
+        // --- shadow lift ---
+        // Placed immediately after the tonemap and before grain, so the grain
+        // sits on top of the lifted blacks rather than being the only thing
+        // living down there. (1-x)^4 confines it to roughly the bottom stop.
+        if ( uShadowLift > 0.0 ) {
+          vec3 toe = vec3( 1.0 ) - clamp( color, 0.0, 1.0 );
+          color += uShadowLift * uShadowTint * ( toe * toe * toe * toe );
         }
 
         // --- look trim ---

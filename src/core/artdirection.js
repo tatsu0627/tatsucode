@@ -149,6 +149,17 @@ export const POST = {
   chromatic: { strength: 0.0016 }, // barely perceptible at the edges only
   vignette: { strength: 0.22, smoothness: 0.6 },
   sharpen: { strength: 0.14 },     // counteracts TAA softness without ringing thin edges
+  // Shadow lift, applied after the tonemap. ACES has a hard toe, and shadowed
+  // asphalt under this sun was measuring 4-6/255 with no separation left in it
+  // — a black hole in the lower third of the frame. Every shipping game grade
+  // lifts the black point off zero for exactly this reason; film never reaches
+  // it either. `strength` is where absolute black lands, and the lift falls off
+  // as (1-x)^4 so it never touches midtones or highlights.
+  //
+  // The tint is the point as much as the lift: the only light reaching a
+  // shadowed surface here is sky, so those pixels should read cool against the
+  // warm key. A neutral grey lift would raise the level and still look wrong.
+  grade: { shadowLift: 0.055, shadowTint: 0x9fb6d8 },
 };
 
 // Degrees -> the sun's world-space direction, shared by lighting and any shader

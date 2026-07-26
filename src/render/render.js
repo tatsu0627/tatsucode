@@ -367,6 +367,17 @@ export class RenderModule {
     c.uVignetteSmooth.value = POST.vignette?.smoothness ?? 0.55;
     c.uContrast.value = POST.look?.contrast ?? 1.03;
     c.uSaturation.value = POST.look?.saturation ?? 1.02;
+    // The lift rides with the tonemap: it exists to undo that curve's toe, so
+    // turning the tonemap off has to turn it off too.
+    c.uShadowLift.value = P.tonemap ? (POST.grade?.shadowLift ?? 0) : 0;
+    // Unpacked by hand rather than through THREE.Color: colour management would
+    // convert the hex to the linear working space, but this lift is applied
+    // after the tonemap, in display space, so the sRGB bytes are already the
+    // numbers we want.
+    const tint = POST.grade?.shadowTint ?? 0xffffff;
+    c.uShadowTint.value.setRGB(
+      ((tint >> 16) & 255) / 255, ((tint >> 8) & 255) / 255, (tint & 255) / 255,
+      THREE.LinearSRGBColorSpace);
     // Dither belongs to whichever pass writes the 8-bit framebuffer.
     c.uDither.value = this.sharpen.enabled ? 0 : 1;
 
