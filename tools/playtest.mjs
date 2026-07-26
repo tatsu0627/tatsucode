@@ -40,6 +40,15 @@ page.on('console', m => {
   if (m.type() === 'error' && !/favicon|404/.test(t)) errors.push(t);
 });
 
+// The renderer is software-rasterised and the engine clamps dt to 1/15 s, so
+// wall-clock waits are meaningless here: 2 seconds of real time can be a single
+// simulated frame. Every wait is therefore expressed in engine frames.
+const waitFrames = async (n, timeoutMs = 240000) => {
+  const start = await page.evaluate(() => window.__ENGINE__.frame);
+  await page.waitForFunction(
+    (target) => window.__ENGINE__.frame >= target, start + n, { timeout: timeoutMs });
+};
+
 const results = [];
 const check = (name, pass, detail = '') => {
   results.push({ name, pass, detail });
@@ -58,7 +67,7 @@ check('boots without error', !boot, boot ? (boot.message || '').slice(0, 120) : 
 if (boot) { await finish(); }
 
 // Let a few frames run so the first-frame transients settle.
-await page.waitForTimeout(3000);
+await waitFrames(5);
 
 const snap = () => page.evaluate(() => {
   const e = window.__ENGINE__;
@@ -114,7 +123,7 @@ const deployed = await page.evaluate(() => {
   return true;
 });
 check('main menu offers a deploy control', deployed);
-await page.waitForTimeout(900);
+await waitFrames(3);
 const started = await page.evaluate(() => {
   const p = window.__ENGINE__.modules.get('player');
   return { enabled: p.enabled !== false };
@@ -123,23 +132,22 @@ check('deploying enables the player', started.enabled);
 
 // --- look -----------------------------------------------------------------
 await page.mouse.move(480, 270);
-await page.waitForTimeout(300);
+await waitFrames(2);
 await page.mouse.move(480, 270);
 for (let i = 0; i < 12; i++) {
   await page.mouse.move(480 + i * 18, 270, { steps: 1 });
-  await page.waitForTimeout(40);
 }
-await page.waitForTimeout(400);
+await waitFrames(3);
 const look = await snap();
 check('mouse look turns the camera', Math.abs(look.yaw - a.yaw) > 1e-4,
   `yaw ${a.yaw} -> ${look.yaw}`);
 
 // --- movement -------------------------------------------------------------
 await page.keyboard.down('w');
-await page.waitForTimeout(1800);
+await waitFrames(40);
 const moving = await snap();
 await page.keyboard.up('w');
-await page.waitForTimeout(1200);
+await waitFrames(25);
 const stopped = await snap();
 
 const travelled = Math.hypot(moving.pos[0] - look.pos[0], moving.pos[2] - look.pos[2]);
@@ -154,7 +162,7 @@ check('player stays on the ground', stopped.onGround === true);
 // --- collision: walk hard into the nearest wall for a while ---------------
 const before = await snap();
 await page.keyboard.down('w');
-await page.waitForTimeout(6000);
+await waitFrames(90);
 await page.keyboard.up('w');
 const after = await snap();
 const escaped = Math.abs(after.pos[1] - before.pos[1]) > 5;
@@ -164,9 +172,9 @@ check('player does not fall through the world', !escaped,
 // --- firing ---------------------------------------------------------------
 const preFire = await snap();
 await page.mouse.down();
-await page.waitForTimeout(1500);
+await waitFrames(20);
 await page.mouse.up();
-await page.waitForTimeout(800);
+await waitFrames(6);
 const postFire = await snap();
 check('firing consumes ammo', postFire.ammo < preFire.ammo,
   `${preFire.ammo} -> ${postFire.ammo}`);
@@ -175,7 +183,9 @@ check('firing resolves shots in combat', postFire.shots > preFire.shots,
 
 // --- reload ---------------------------------------------------------------
 await page.keyboard.press('r');
-await page.waitForTimeout(3200);
+// Reload takes 2.15 s of simulated time, and dt is clamped to 1/15 s, so it
+// needs at least ~33 frames regardless of how long that takes in real time.
+await waitFrames(55);
 const postReload = await snap();
 check('reload refills the magazine', postReload.ammo > postFire.ammo,
   `${postFire.ammo} -> ${postReload.ammo}`);
