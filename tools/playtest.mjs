@@ -86,6 +86,7 @@ const snap = () => page.evaluate(() => {
     // movement was rejected".
     locked: !!p.input?.locked,
     keyForward: !!p.input?.down?.('forward'),
+    rawKeys: p.input ? Object.keys(p.input.keys).filter(k => p.input.keys[k]) : [],
     wish: p.state.wishDir ? p.state.wishDir.toArray().map(n => +n.toFixed(2)) : null,
     moveIntent: !!p.state.moveIntent,
     axis: p.state.axis || null,
@@ -141,7 +142,7 @@ const stopped = await snap();
 
 const travelled = Math.hypot(moving.pos[0] - look.pos[0], moving.pos[2] - look.pos[2]);
 check('W moves the player', travelled > 0.5,
-  `${travelled.toFixed(2)} m — key=${moving.keyForward} axis=${JSON.stringify(moving.axis)} ` +
+  `${travelled.toFixed(2)} m — key=${moving.keyForward} raw=${JSON.stringify(moving.rawKeys)} axis=${JSON.stringify(moving.axis)} ` +
   `intent=${moving.moveIntent} wish=${JSON.stringify(moving.wish)} vel=${JSON.stringify(moving.vel)} ` +
   `dead=${moving.dead} slide=${moving.sliding} mantle=${moving.mantling}`);
 check('player decelerates on release', stopped.speed < Math.max(0.5, moving.speed * 0.5),

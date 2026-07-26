@@ -35,6 +35,9 @@ const SPARK_LIGHT = new THREE.Color(1.0, 0.70, 0.30);
 const MUZZLE_LIGHT = new THREE.Color(1.0, 0.72, 0.35);
 const BLAST_LIGHT = new THREE.Color(1.0, 0.55, 0.20);
 const SCORCH_TINT = new THREE.Color(0.10, 0.09, 0.08);
+// Tracers are hot and slightly green-yellow at the core. TracerSystem reads
+// .r/.g/.b directly and has no null default, so this must be a real Color.
+const TRACER_COLOR = new THREE.Color(2.4, 1.75, 0.55);
 
 export class FxModule {
   constructor() {
@@ -191,7 +194,7 @@ export class FxModule {
   }
 
   tracer(from, to, speed = 900, brightness = 1) {
-    this.tracers.spawn(from, to, speed, this.time, null, 0.028, 6.5, brightness);
+    this.tracers.spawn(from, to, speed, this.time, TRACER_COLOR, 0.028, 6.5, brightness);
   }
 
   /**
