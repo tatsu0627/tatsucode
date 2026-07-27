@@ -21,10 +21,21 @@ import { FULLSCREEN_VERT, GLSL_RECONSTRUCT } from '../shaderlib.js';
  * fragment landed under this frame's sub-pixel jitter, so differencing it
  * against an unjittered previous position reports the jitter itself as motion:
  * a systematic half-pixel of velocity on a completely stationary camera, in a
- * different direction every frame. That fed motion blur, which smeared a still
- * frame, and fed TAA's history rejection multiplied by uVelocityBoost, which
- * made every frame look like ~6 px of movement and stopped the history ever
- * accumulating — so TAA never resolved any edge.
+ * different direction every frame. That fed motion blur, which demonstrably
+ * smeared a still frame: ablating it on the weapon vantage moved the frame's
+ * mean luminance by ten points and turned a soft viewmodel crisp.
+ *
+ * It also shifted TAA's history lookup — `prevUv = uv - velocity` was off by
+ * half a pixel every frame, so history was resampled at a fractional offset on
+ * every pass, and repeated bilinear resampling at a fractional offset is a
+ * low-pass filter. That is a softness cost.
+ *
+ * It is worth being precise about what this did NOT do, because the first
+ * version of this note claimed otherwise: it did not stop TAA accumulating.
+ * uScale is 1, so velocity is in UV units; half a pixel at 1600 wide is
+ * 0.0003, and multiplied by uVelocityBoost (12) that moves the blend weight
+ * from 0.080 to 0.084. A 4% nudge is not history rejection. Whatever leaves
+ * edges looking under-resolved, this was not the cause.
  *
  * KNOWN LIMITATION: this covers camera motion, which is essentially all of the
  * motion in a first-person shooter, plus an explicit zero for the viewmodel.
