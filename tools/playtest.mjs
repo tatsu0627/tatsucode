@@ -94,6 +94,11 @@ const snap = () => page.evaluate(() => {
     agents: ai.agents.length,
     alive: ai.agents.filter(a => a.alive).length,
     engaged: ai.agents.filter(a => a.stance === 2).length,
+    // Latched: an agent is only in the engage stance on frames where its own
+    // line of sight was recomputed, and that runs on a per-frame budget spread
+    // across the squad. Sampling the live stance therefore misses agents that
+    // are mid-burst or mid-pause, which is most of them most of the time.
+    hasSeen: ai.agents.filter(a => a.hasSeen).length,
     aiShots: ai.agents.reduce((n, x) => n + (x.shotsFired || 0), 0),
     // Diagnostics: distinguish "input never arrived" from "input arrived but
     // movement was rejected".
@@ -197,8 +202,12 @@ check('reload draws from reserve', postReload.reserve < preFire.reserve,
   `${preFire.reserve} -> ${postReload.reserve}`);
 
 // --- AI -------------------------------------------------------------------
-check('AI notices the player', postReload.engaged > 0,
-  `${postReload.engaged}/${postReload.alive} engaged`);
+// Perception is the property under test, so assert on the latched flag rather
+// than on a stance that is true for one frame in several. Whether they act on
+// it is the next two checks' job, and they measure it in damage dealt.
+check('AI notices the player', postReload.hasSeen > 0,
+  `${postReload.hasSeen}/${postReload.alive} have acquired, ${postReload.engaged} engaging this frame, ` +
+  `${postReload.aiShots} shots fired`);
 
 // --- return fire ----------------------------------------------------------
 // Stand exposed and let the garrison work. This asserts both halves of a fight:
