@@ -1,120 +1,158 @@
-# Codex 投入プロンプト
+# Codex 投入プロンプト（v3.0 対応）
 
 添付する2文書とともに、以下をそのまま Codex に渡す。
 
-- `docs/tutorflow-ai/source-plan-v1.md`（製品要件）
-- `docs/tutorflow-ai/development-plan.md`（詳細設計・43チケット）
+- `docs/tutorflow-ai/development-plan-v3.md`（**実装対象。これに従う**）
+- `docs/tutorflow-ai/source-plan-v1.md`（背景と動機。§1〜§5 と §16 のみ参照）
+
+**`development-plan.md`（v2.0）は渡さない。** 学生ポータル前提の旧版で、
+v3.0 に置き換えられている。
 
 ---
 
 ```text
-TutorFlow AI という Web アプリを新規に実装してください。要件は添付の
-「TutorFlow AI ポートフォリオ開発計画 v1.0」、設計とチケット一覧は
-「TutorFlow AI 詳細開発計画 v2.0」にあります。両方を最初に通読してから
-着手してください。
+TutorFlow AI という Web アプリを新規に実装してください。
+
+実装対象は添付の「TutorFlow AI 詳細開発計画 v3.0（チューター専用ツール版）」
+です。これが唯一の設計仕様です。もう一方の v1.0 は開発の背景と動機を知るための
+参考資料で、§1〜§5 と §16 だけ読んでください。v1.0 に出てくる学生向け画面・
+学生ログイン・外部公開の記述は v3.0 で廃止済みなので実装しないでください。
+
+両方を通読してから着手してください。
 
 ## あなたのゴール
 
-詳細計画 §13 の D1-1 から D7-6 までを、途中で確認を求めずに一度で完了させる。
-D8 以降（デプロイ・AI評価・面接準備）は人間の作業なので着手しない。
+v3.0 §15 の D1-1 から D7-7 までを、途中で確認を求めずに一度で完了させる。
+D8 以降（デプロイ・実 API 評価・面接準備）は人間の作業なので着手しない。
 
-作業を止めてよいのは、外部サービスの資格情報がないと物理的に先へ進めない
-ときだけです。その場合も止まらず、後述の「資格情報がない前提での進め方」に
-従って実装を続けてください。
+外部サービスの資格情報がなくても止まらず、後述の方針で実装を続けてください。
+
+## このアプリの一行要約（実装中に見失わないこと）
+
+チューター本人が使う授業準備ツール。AI が練習問題を下書きし、**本人が検算して
+確認済みにするまでセッション記録に紐づけられない**。利用者は1人。学生は使わない。
+
+判断に迷ったら「未検証の AI 出力を本人が誤って使わない構造になっているか」を
+基準にしてください。
 
 ## 絶対に守る前提（推測で決めないこと）
 
 | 項目 | 確定値 |
 |---|---|
 | Node.js | 22 LTS（`.nvmrc` に `22`） |
-| Next.js | 15.x App Router、`src/` ディレクトリは使わない |
+| Next.js | 15.x App Router、`src/` は使わない |
 | TypeScript | 5.x、`strict: true`、`noUncheckedIndexedAccess: true` |
 | Tailwind CSS | **4.x（CSS-first）**。`@import "tailwindcss";` と `@theme` を `app/globals.css` に書く。`tailwind.config.js` は作らない。PostCSS は `@tailwindcss/postcss` |
-| Zod | **4.x**。`z.uuid()` / `z.iso.date()` のトップレベル形式 API を使う（3系の `z.string().uuid()` は使わない） |
+| Zod | **4.x**。`z.uuid()` / `z.iso.date()` のトップレベル形式 API（3系の `z.string().uuid()` は使わない） |
 | Supabase | `@supabase/supabase-js` + `@supabase/ssr` |
-| AI SDK | `@anthropic-ai/sdk`、モデルは環境変数 `AI_MODEL`（既定 `claude-opus-5`） |
-| テスト | Vitest 3.x（unit / integration）、Playwright（e2e） |
-| パッケージマネージャ | npm。`package-lock.json` をコミットする |
+| AI SDK | `@anthropic-ai/sdk`、モデルは `AI_MODEL`（既定 `claude-opus-5`） |
+| テスト | Vitest 3.x、Playwright |
+| パッケージマネージャ | npm。`package-lock.json` をコミット |
 
-詳細計画 §1.2 に「採用しないもの」があります。ORM、状態管理ライブラリ、
-tRPC、認証SaaS、KaTeX は導入しないでください。
+v3.0 §3.2 の非採用リスト（ORM、状態管理ライブラリ、tRPC、認証SaaS、KaTeX、
+Redis）は導入しないでください。
 
 ## 資格情報がない前提での進め方
 
-Supabase と Anthropic API には接続できないものとして進めます。以下の
-方針で「コードは完成しているが、外部接続だけ未検証」の状態にしてください。
+Supabase と Anthropic API には接続できないものとして進めます。
 
-1. **DB 型定義は手書きする。** `supabase gen types` は実行できないので、
-   `supabase/migrations/0001_init.sql` の DDL から `lib/db/types.ts` を
-   手で起こしてください。enum は TypeScript の union 型にします。
+1. **DB 型定義は手書きする。** `supabase gen types` は使えないので、
+   `0001_init.sql` の DDL から `lib/db/types.ts` を手で起こしてください。
+   PostgreSQL の enum は TypeScript の union 型にします。
 
 2. **マイグレーションは書くだけ。** `0001_init.sql` / `0002_rls.sql` /
-   `0003_seed.sql` と `supabase/reset-demo.sql` を完成させます。適用は
-   人間が行います。SQL は PostgreSQL 16 の構文で書き、手元で構文の
-   自己レビューをしてください。
+   `0003_seed.sql` / `reset-demo.sql` を完成させます。適用は人間が行います。
 
-3. **seed の中身はあなたが決める。** 詳細計画 §4.3 の条件（架空学生3名、
-   セッション6件、教材は draft / approved / rejected を各1件以上、学生C は
-   セッション0件）を満たす具体的な INSERT 文を書いてください。実在人物を
-   想起させる名前・成績・相談内容を使わないこと。ファイル先頭に
-   §4.3 記載の英語コメント2行を必ず入れます。
+3. **seed の中身はあなたが決める。** v3.0 §4.3 の条件を満たす具体的な INSERT を
+   書いてください。デモアカウント配下にのみ作り、オーナーには何も入れません。
+   ファイル先頭に §4.3 記載の英語コメント2行を必ず入れます。実在人物を
+   想起させる名前・成績・相談内容は使わないこと。
 
-4. **AI 呼び出しはモック可能にする。** `lib/ai/generate.ts` の
-   `generateMaterialDraft()` の入口で、`process.env.MOCK_AI === "1"` かつ
-   `process.env.NODE_ENV !== "production"` のとき `lib/ai/mock.ts` の
-   固定 fixture を返すようにしてください。fixture は
-   `materialDraftSchema` を通る正常データ1件と、検証に失敗する異常データ
-   （問題数不一致・難易度不一致・ヒント空）を3件用意します。
+4. **AI 呼び出しはモック可能にする。** `generateMaterialDraft()` の入口で
+   `process.env.MOCK_AI === "1"` かつ `process.env.NODE_ENV !== "production"` の
+   とき `lib/ai/mock.ts` の fixture を返します。fixture は正常1件と、
+   異常3件（問題数不一致・難易度不一致・ヒント空配列）を用意してください。
 
 5. **integration テストは書くが実行を強制しない。**
-   `describe.skipIf(!process.env.SUPABASE_TEST_URL)` でガードしてください。
-   ガードなしで書くと CI が落ちます。
+   `describe.skipIf(!process.env.SUPABASE_TEST_URL)` でガードします。
+   ガードなしだと CI が落ちます。
 
-6. **`npm run build` を通すために動的レンダリングを明示する。**
-   認証や DB アクセスを伴うページ（`(tutor)` と `(student)` 配下すべて）に
+6. **`npm run build` を通すため動的レンダリングを明示する。**
+   `app/(app)/` と `app/run/` 配下のページに
    `export const dynamic = "force-dynamic";` を書いてください。これがないと
    ビルド時のプリレンダリングが Supabase へ接続しようとして失敗します。
 
 ## Supabase クライアントの構成（詰まりやすいので明示する）
 
-Next.js 15 では `cookies()` が非同期です。以下3つを別ファイルで実装します。
+Next.js 15 では `cookies()` が非同期です。v3.0 §7.1 のとおり3つに分けます。
 
 - `lib/db/client.ts` — ブラウザ用。`createBrowserClient`
-- `lib/db/server.ts` — Server Component 用。`createServerClient` +
-  `await cookies()`。**Cookie の書き込みは try/catch で握りつぶす**
-  （RSC からは書けないため）。先頭に `import "server-only";`
-- `lib/db/action.ts` — Server Action / Route Handler 用。Cookie 書き込み可能
+- `lib/db/server.ts` — Server Component 用。`createServerClient` + `await cookies()`。
+  **Cookie 書き込みは try/catch で握りつぶす**（RSC からは書けない）。
+  先頭に `import "server-only";`
+- `lib/db/action.ts` — Server Action / Route Handler 用。Cookie 書き込み可
 
-`SUPABASE_SERVICE_ROLE_KEY` を使うのは seed とテストのユーティリティだけに
-限定し、アプリのリクエスト経路では絶対に使わないでください。
+`SUPABASE_SERVICE_ROLE_KEY` を使うのは seed とテストユーティリティだけ。
+アプリのリクエスト経路では絶対に使わないでください。
+
+## 実装で絶対に外してはいけない4点
+
+1. **確認ゲートは DB 制約で表現する。**
+   `0001_init.sql` の
+   `constraint materials_session_requires_verified check (session_id is null or state = 'verified')`
+   を必ず入れてください。これがこのアプリの中核です。アプリ側のチェックだけで
+   済ませないこと。Integration テストでこの制約が実際に効くことを検証します。
+
+2. **RLS は所有者スコープ。** v3.0 §4.2 のポリシーをそのまま実装します。
+   匿名ロール向けのポリシーは1つも書かないでください（デフォルト拒否を使う設計）。
+
+3. **AI 呼び出しは v3.0 §9.2 のコードに従う。** 特に:
+   - `max_tokens: 16000`（thinking と応答本文の合計上限）
+   - `temperature` / `top_p` を**渡さない**（Opus 5 では 400 になる）
+   - `content` を読む前に `stop_reason === "refusal"` を判定する
+   - `parsed_output` が null になりうるので必ずチェックする
+   - `system` は固定文字列にする（プロンプトキャッシュのため）
+
+4. **`buildUserPrompt` は4引数だけ受け取る。** 分野・難易度・問題数・学習目標。
+   学生の alias や private_notes を型として渡せない形にしてください。
+
+## その他の実装注意
+
+- 状態遷移は `unverified → verified` と `unverified → discarded` のみ。
+  各 Server Action の冒頭で `if (material.state !== "unverified") throw` を書く
+- 「確認済みにする」ボタンはチェックリスト7項目が全てチェックされるまで無効
+- セッション記録の「使った教材」選択欄には `verified` の教材だけを出す
+- `/run/[materialId]` は未確認・破棄済みの教材なら 404 を返す
+- レート制限はオーナーとデモで別の上限（`profiles.is_demo` で分岐）
+- `console.error` に出してよいのは `{ code, materialId, ownerId, latencyMs }` だけ。
+  プロンプト本文と AI 応答本文はログに出さない
+- 教材の状態は色だけでなく必ず文字で表示する（未確認 / 確認済み / 破棄）
 
 ## 実装順序
 
-詳細計画 §13 のチケット順（D1-1 → D7-6）で進めてください。ただし以下の
-2点だけ順序を変えます。
+v3.0 §15 のチケット順（D1-1 → D7-7）。ただし D4-1（Zod スキーマ）と
+D4-2（Unit テスト）は外部依存がないので D3 より先に着手して構いません。
 
-- D4-1（Zod スキーマ）と D4-2（Unit テスト）は D3 より先に着手してよい。
-  外部依存がなく、他の実装の土台になるため。
-- UI プリミティブ（D3-2）は最小限にする。Button / Input / Textarea /
-  Select / Badge / Card の6つだけ。装飾に時間を使わない。
+UI プリミティブ（D3-2）は Button / Input / Textarea / Select / Badge / Card の
+6つだけ。装飾に時間を使わないでください。
 
-**時間や出力量が足りなくなった場合の優先順位:**
-落としてよい順に、(1) P1 相当の磨き込み、(2) Dashboard の集計表示、
-(3) 学生詳細の進捗表示。**RLS ポリシー、AI 出力検証、承認フローの
-状態遷移制約、Material Review 画面は絶対に落とさないでください。**
-これらがこの作品の中身です。
+**出力量が足りなくなった場合に落としてよい順:**
+(1) 教材ライブラリのフィルタ、(2) 理解度推移の表示、(3) Landing の作り込み。
+
+**絶対に落とさないもの:** DB の3つの CHECK 制約、RLS ポリシー、AI 出力検証
+（Zod + `assertMatchesRequest`）、Material Review 画面、セッションモード。
 
 ## 各段階で必ず実行するコマンド
 
-まとめて最後に走らせるのではなく、チケット群ごとに実行して緑を保ってください。
+チケット群ごとに実行して緑を保ってください。
 
     npm run lint
     npm run typecheck
     npm run test:unit
     npm run build
 
-`npm run build` にはプレースホルダの環境変数が必要です。
-`.env.local` に以下を置いて実行してください（`.gitignore` 済みであること）。
+`npm run build` にはプレースホルダの環境変数が必要です。`.env.local` に以下を
+置いてください（`.gitignore` 済みであること）。
 
     NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co
     NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
@@ -122,100 +160,74 @@ Next.js 15 では `cookies()` が非同期です。以下3つを別ファイル�
     ANTHROPIC_API_KEY=placeholder
     MOCK_AI=1
 
-E2E は `MOCK_AI=1` でも DB が必要なので、**テストコードは書くが実行は
-しなくて構いません。** 実行できなかったことを最終報告に明記してください。
+E2E は `MOCK_AI=1` でも DB が必要なので、テストコードは書くが実行しなくて
+構いません。実行できなかったことを最終報告に明記してください。
 
-## 実装で特に注意する箇所
+## コミットについて
 
-1. **RLS が権限管理の中核です。** 詳細計画 §4.2 のポリシーをそのまま
-   実装してください。特に `sessions` テーブルには学生向けポリシーを
-   **書かない**でください（デフォルト拒否を利用する設計です）。
+**作業の早い段階で一度コミットしてください。** 前回の実装では最後まで
+コミットせずに終わり、`.git/index.lock` の権限問題で成果物を取り出せなく
+なりました。D1 が終わった時点で最初のコミットを作り、以降チケット群ごとに
+コミットしてください。
 
-2. **学生向けクエリは列を限定する。** `materials.ai_draft` は approved 行でも
-   RLS では防げません。`lib/db/queries/materials.ts` の
-   `getApprovedMaterialsForStudent()` で `select` する列を
-   `id, topic, difficulty, approved_content, approved_at` に限定し、
-   `toStudentView()` で変換してください。§11.1 の Unit テストで
-   `ai_draft` と `rejection_reason` が返り値に含まれないことを検証します。
-
-3. **AI 呼び出しの実装は詳細計画 §8.2 のコードに従う。** 特に以下4点:
-   - `max_tokens: 16000`（thinking と応答本文の合計上限）
-   - `temperature` / `top_p` は**渡さない**（Opus 5 では 400 になる）
-   - `content` を読む前に `stop_reason === "refusal"` を判定する
-   - `parsed_output` が null になりうるので必ずチェックする
-
-4. **構造検証を通っても要求と一致するとは限らない。** §6.3 の
-   `assertMatchesRequest()`（問題数・難易度の一致確認）を必ず実装し、
-   Unit テストで両方の不一致ケースを検証してください。
-
-5. **承認ボタンはチェックリスト7項目が全てチェックされるまで無効。**
-   これは UI の飾りではなく製品原則の実装です（§9.7）。
-
-6. **状態遷移は draft からのみ。** `approveMaterial` / `rejectMaterial` の
-   両 Server Action の冒頭で `if (material.status !== "draft") throw` を
-   書いてください。
-
-7. **エラーログに個人情報を残さない。** `console.error` に出してよいのは
-   `{ code, materialId, tutorId, latencyMs }` だけです。プロンプト本文と
-   AI 応答本文はログに出さないでください。
+コミットできない環境だと分かった場合は、**その時点で作業を止めずに続行し、
+最終報告の冒頭にその事実を書いてください。**
 
 ## 作ってよいドキュメントと、作ってはいけないドキュメント
 
 **あなたが書くもの:**
-- `README.md` — 詳細計画 §22 の構成。ただし後述の正直さルールに従う
-- `docs/architecture.md` / `docs/data-model.md` — Mermaid 図を含む
-- `AGENTS.md` — このプロンプトで確定したスタックと制約、実行コマンドを
-  次のセッションが読めるようにまとめたもの
+- `README.md` — v3.0 §16 の構成。ただし後述の正直さルールに従う
+- `docs/architecture.md` / `docs/data-model.md` — Mermaid 図を含む。
+  data-model.md には3つの CHECK 制約の意図を必ず書く
+- `AGENTS.md` — 確定したスタック・制約・実行コマンドを次のセッション用にまとめる
 
 **雛形だけ作り、中身を書かないもの:**
 - `DEVLOG.md` — 見出しと書式だけ。**日付入りの作業記録を捏造しない**
-- `AI_USAGE.md` — 節見出しだけ。中身は人間が書く
-- `docs/ai-evaluation.md` — 詳細計画 §14.2 の表の枠だけ。**採点結果を
-  埋めない**（実 API で評価していないため）
+- `AI_USAGE.md` — 節見出しだけ
+- `docs/ai-evaluation.md` — v3.0 の評価表の枠だけ。**採点結果を埋めない**
+  （実 API で評価していないため）
 
-### README の正直さルール（重要）
+### README の正直さルール
 
 実行して緑を確認したものと、書いただけのものを区別して書いてください。
 
-- 実行できていないテスト（integration / e2e）は「実装済み・未実行」と明記する
+- 未実行のテスト（integration / e2e）は「実装済み・未実行」と明記する
 - 外部接続を伴う機能は「ローカル環境では未検証」と明記する
-- Definition of Done（§18）の16項目のうち、達成できていないものに
+- Definition of Done（v3.0 §19）の18項目のうち、達成していないものに
   チェックを入れない
 
-動かしていないものを「動く」と書かないこと。これはこの作品の主張
-（AI の出力を検証せずに信用しない）と直接矛盾するため、最も重要な制約です。
-
-## コミット
-
-詳細計画 §19 のコミット計画に沿って分割してください。1つの巨大な
-コミットにしないこと。各コミットは lint / typecheck / test:unit が
-通る状態にしてください。
+動かしていないものを「動く」と書かないこと。この作品の主張（AI の出力を
+検証せずに信用しない）と直接矛盾するため、最も重要な制約です。
 
 ## 最終報告に必ず含めること
 
-1. 完了したチケット ID の一覧（D1-1 〜 D7-6 のうちどれを終えたか）
-2. 着手しなかった / 完了できなかったチケットとその理由
-3. **実行して緑を確認したコマンドと、実行できなかったコマンドの区別**
-4. 人間が実行する必要が残っている作業の手順（Supabase へのマイグレーション
-   適用、デモアカウント作成、`supabase gen types` による型の再生成、
-   Anthropic API キー設定、初回の実 API 生成確認）
-5. 実装中に詳細計画と食い違った箇所と、その判断理由
-6. 手書きした `lib/db/types.ts` が DDL と一致していることをどう確認したか
+1. コミットできたかどうか（できていない場合は冒頭に明記）
+2. 完了したチケット ID の一覧
+3. 着手しなかった / 完了できなかったチケットと理由
+4. **実行して緑を確認したコマンドと、実行できなかったコマンドの区別**
+5. 人間が実行する必要が残っている作業（マイグレーション適用、
+   オーナー/デモアカウント作成、`supabase gen types` での型再生成、
+   Anthropic キー設定、実 API での生成確認）
+6. v3.0 と食い違った箇所とその判断理由
+7. 手書きした `lib/db/types.ts` が DDL と一致していることをどう確認したか
 ```
 
 ---
 
 ## 投入後に人間がやること
 
-Codex が終わったら以下を順に実施する。詳細計画 §13 の D8 に対応。
+1. **まず成果物を手元に取り出す**（コミットの有無を確認）
+2. Supabase dev / test プロジェクトにマイグレーション3本を適用
+3. オーナーとデモの Auth ユーザーを作り、`profiles` 行を作成（デモは `is_demo = true`）
+4. `supabase gen types` を実行し、手書きの `lib/db/types.ts` と**差分を確認**。
+   差分があれば手書き側の誤りなので生成物で置き換える
+5. `MOCK_AI=0` にして実 API で1件生成し、`generation_runs` に記録が残ることを確認
+6. `npm run test:integration` を実行。**特に
+   `db rejects linking an unverified material to a session` が通ることを確認**
+7. `npm run test:e2e` を実行
+8. Vercel へデプロイ
+9. **自分の担当セッションで実際に使い始める**（Definition of Done 16番）
 
-1. Supabase dev プロジェクトにマイグレーション3本を適用
-2. デモアカウント2つを作成し `profiles` 行を挿入
-3. `supabase gen types` を実行し、手書きの `lib/db/types.ts` と**差分を確認**
-   （差分があれば手書き側の誤りなので、生成物で置き換える）
-4. `MOCK_AI` を外して実 API で1件生成し、`generation_runs` に記録が残ることを確認
-5. integration テストと E2E をローカルで実行
-6. Vercel へデプロイ
-
-`DEVLOG.md` / `AI_USAGE.md` / `docs/ai-evaluation.md` は雛形のままなので、
-自分で埋める。ここが面接での説明の材料になる。
+`DEVLOG.md` / `AI_USAGE.md` / `docs/ai-evaluation.md` は雛形のままなので自分で
+埋める。特に AI 評価は、架空条件で回した結果より**実務で AI が誤った実例**を
+優先して記録する。ここが面接での説明材料になる。
