@@ -2,6 +2,8 @@ import "server-only";
 
 import type { MaterialDraft } from "@/lib/validation/ai-output";
 import type { GenerateRequest } from "@/lib/validation/material";
+import type { ProbeDraft } from "@/lib/validation/probe-output";
+import type { GenerateProbeRequest } from "./generate";
 
 function problem(index: number) {
   return {
@@ -30,4 +32,19 @@ export const invalidMockFixtures = {
 
 export function mockDraft(request: GenerateRequest) {
   return { draft: validMockDraft(request), latencyMs: 250, modelLabel: "mock-gpt-5.6-luna" };
+}
+
+export function validMockProbeDraft(request: GenerateProbeRequest): ProbeDraft {
+  return {
+    concept_code: request.conceptCode,
+    topic: request.conceptLabel,
+    difficulty: "introductory",
+    learning_objective: `Check prerequisite understanding of ${request.conceptLabel}`,
+    problems: [problem(0)],
+    review_warning: "AI-generated draft. Verify all mathematics before use.",
+  };
+}
+
+export function mockProbeDraft(request: GenerateProbeRequest) {
+  return { draft: validMockProbeDraft(request), latencyMs: 250, modelLabel: "mock-gpt-5.6-luna" };
 }

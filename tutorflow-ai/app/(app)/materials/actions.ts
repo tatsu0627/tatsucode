@@ -49,7 +49,7 @@ export async function discardMaterial(materialId: string, reason: string) {
   if (material.state !== "unverified") throw new Error("invalid_material_state");
   nextState(material.state, "discarded");
   const normalized = reason.trim().slice(0, 500) || null;
-  const { error } = await db.from("materials").update({ state: "discarded", discard_reason: normalized, session_id: null, updated_at: new Date().toISOString() }).eq("id", materialId).eq("state", "unverified");
+  const { error } = await db.from("materials").update({ state: "discarded", discard_reason: normalized, updated_at: new Date().toISOString() }).eq("id", materialId).eq("state", "unverified");
   if (error) throw new Error("material_discard_failed");
   revalidatePath(`/materials/${materialId}`);
   redirect(`/materials/${materialId}`);
@@ -59,7 +59,7 @@ export async function duplicateMaterial(formData: FormData) {
   const materialId = String(formData.get("materialId") ?? "");
   const { db, material } = await ownedMaterial(materialId);
   if (material.state !== "verified" || !material.verified_content) throw new Error("verified_material_required");
-  const { data, error } = await db.from("materials").insert({ student_id: material.student_id, topic: material.topic, difficulty: material.difficulty, state: "unverified", ai_draft: material.verified_content, verified_content: material.verified_content, prompt_version: material.prompt_version, model_label: material.model_label }).select("id").single();
+  const { data, error } = await db.from("materials").insert({ student_id: material.student_id, concept_id: material.concept_id, kind: material.kind, topic: material.topic, difficulty: material.difficulty, state: "unverified", ai_draft: material.verified_content, verified_content: material.verified_content, prompt_version: material.prompt_version, model_label: material.model_label }).select("id").single();
   if (error || !data) throw new Error("material_duplicate_failed");
   redirect(`/materials/${data.id}`);
 }

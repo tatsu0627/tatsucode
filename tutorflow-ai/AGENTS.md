@@ -12,11 +12,13 @@ Do not add an ORM, state-management package, tRPC, another auth provider, KaTeX,
 
 ## Non-negotiable constraints
 
-- A material may have `session_id` only while its state is `verified`; preserve the database CHECK constraint.
+- A probe may reference only a verified material; preserve `material_state`, its CHECK, and the composite foreign key to `materials(id, state)`.
 - Material transitions are `unverified -> verified` and `unverified -> discarded` only.
 - RLS remains owner-scoped and has no anonymous policies.
 - AI output must pass Zod structural validation and `assertMatchesRequest`.
 - `buildUserPrompt` accepts topic, difficulty, problem count, and learning objective only.
+- `buildProbePrompt` accepts concept code and English label only.
+- Keep the diagnosis engine pure: it may import types but not database, React, or Next.js modules.
 - Never log prompt text, AI response text, student aliases, or private notes.
 - Display material state using words as well as color.
 

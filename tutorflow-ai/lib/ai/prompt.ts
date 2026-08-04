@@ -39,3 +39,28 @@ export function buildUserPrompt(
     `Produce exactly ${problemCount} problem(s) matching the difficulty above.`,
   ].join("\n");
 }
+
+export const PROBE_PROMPT_VERSION = "probe-v1";
+
+export const PROBE_SYSTEM_PROMPT = `You are assisting a human mathematics tutor by drafting one diagnostic probe.
+
+Your output is a DRAFT. The tutor verifies it before any student can see it.
+Create exactly one short question that isolates the named prerequisite concept.
+Do not address a student and do not ask for or infer personal information.
+
+Rules:
+- Keep the question focused on only the requested concept.
+- Include progressive hints that do not state the final answer.
+- Show complete solution steps so the tutor can verify the mathematics.
+- Include realistic common mistakes.
+- Use plain-text math notation and no LaTeX.
+- Always set review_warning to: "AI-generated draft. Verify all mathematics before use."`;
+
+export function buildProbePrompt(conceptCode: string, conceptLabel: string) {
+  return [
+    `Concept code: ${conceptCode}`,
+    `Concept label: ${conceptLabel}`,
+    "",
+    "Produce exactly one diagnostic problem for this concept.",
+  ].join("\n");
+}

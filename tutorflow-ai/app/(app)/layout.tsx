@@ -7,6 +7,9 @@ export const dynamic = "force-dynamic";
 const links = [
   ["/home", "\u30db\u30fc\u30e0"],
   ["/students", "\u5b66\u751f"],
+  ["/diagnose", "\u8a3a\u65ad"],
+  ["/consultations", "\u76f8\u8ac7\u5c65\u6b74"],
+  ["/concepts", "\u6982\u5ff5"],
   ["/materials/new", "\u6559\u6750\u3092\u4f5c\u308b"],
   ["/library", "\u30e9\u30a4\u30d6\u30e9\u30ea"],
 ] as const;
