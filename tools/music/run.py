@@ -58,7 +58,7 @@ log = open(f"{OUT}/minimax-log.txt", "w")
 
 
 def attempt(lyrics, duration, steps):
-    client = Client(SPACE)
+    client = Client(SPACE, hf_token=os.environ.get("HF_TOKEN") or None)
     st = dict(state, lyrics=lyrics)
     job = client.submit(st, duration, 42, False, 0, steps, 1.7, api_name="/studio_generate")
     for update in job:
