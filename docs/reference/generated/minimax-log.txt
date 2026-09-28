@@ -1,0 +1,6 @@
+[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
+final outputs: [{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
+Traceback (most recent call last):
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 78, in <module>
+    raise RuntimeError("no audio file in outputs")
+RuntimeError: no audio file in outputs
