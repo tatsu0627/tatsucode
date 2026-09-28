@@ -1,10 +1,10 @@
-=== part 1 duration=135 steps=30
+=== part 1 steps=30
 [{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
-status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 0, 56, 880082), progress_data=None, log=None, type='status')
+status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 14, 20, 997116), progress_data=None, log=None, type='status')
 Traceback (most recent call last):
-  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 89, in <module>
-    wav = attempt(lyr, duration, steps)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 100, in <module>
+    wav = attempt(lyr.strip(), 80, steps)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 70, in attempt
     raise exc
   File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
@@ -15,15 +15,40 @@ Traceback (most recent call last):
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1286, in _predict
     raise AppError(message=message, **result)
-gradio_client.exceptions.AppError: The requested GPU duration (286s) is larger than the maximum allowed
+gradio_client.exceptions.AppError: The requested GPU duration (182s) is larger than the maximum allowed
 
-=== part 1 duration=135 steps=16
+=== part 1 steps=20
 [{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
-status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 1, 5, 586212), progress_data=None, log=None, type='status')
+[{"cmd": "status", "text": "ZeroGPU acquired \u2014 the band is warming up..."}, "ZeroGPU acquired \u2014 warming up...", {"__type__": "update"}, 42]
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 1, "gen": "57fae3eee61e486c963969a17628eff2", "off": 0, "pcm": "wf4n/ycCLwJXBv8Exf5Z/jHw8fMJ+HH7Xxc/Eh8Z/xAB7DHwwddB5AcHvwb/Lr8g/wpfBsHXAeQB6SHxfxr/Ev8aXxIh9dH3Yerx8M0B/QGvDj8LVwKTARH3sfjN/SX+TwjXBgcEjwNx96n5Afmp+r8IJwbPC38I+foB/YHyAfdBAV0Ajw2/CDsD4wLh9
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 2, "gen": "57fae3eee61e486c963969a17628eff2", "off": 220672, "pcm": "uwBvAb4AfwGwAIEBxQB5Aa8AfwGkAI0BtwClAa8AlQGrAKkBlwDNAZ0AwwGUAJ0BnACtAZkArwGTAK0BmQC3AY4AkQGbAJcBjwCdAaIAaQF+AHkBjQBXAY0AWwF8AHMBmQBvAY8AfwGMAF0BoABjAaoAhQGbAFcBmABtAZQAXQGlAGUBwQCDAbQA
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 3, "gen": "57fae3eee61e486c963969a17628eff2", "off": 397312, "pcm": "vwBR++QAcfvEAJn7SwC5+/X/0fuL/+n7Mf8V/Nv+FfyP/iX8rf4V/Mv+Dfzl/gX8//4F/Fj/Bfyo/wH81//5+wgA0fsAANn7xf+R+8b/efuo/4H7jP9R+zX/SfvZ/qH7tf4l/Jn+dfy9/s380/4d/ZH+Rf0t/n39xf2x/aH97f2h/W3+df0V/1X9
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 4, "gen": "57fae3eee61e486c963969a17628eff2", "off": 573952, "pcm": "+f5XAiP/vwKa/zMBav+2/53+LgAv/+YAef9fAF3/d//t/tj/B/9JALH/EABd/2kAqf66AFn+ff/Z/nP/C//I/+f+Cf65/t38p/61/JP+ef1r/t39rf4Z/an+JfyT/mn8Gf4V/PH9sftR/k388f3p/Bn+Pf2R/l39x/61/CH+TfyB/W38yf25+0X+
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 5, "gen": "57fae3eee61e486c963969a17628eff2", "off": 750592, "pcm": "v/+3BugAnwZ1AZcF9gA/BCUB8wItAfcC/QBJAYsBD/+nAYD/WQFHAMAAO/8VABH+IgD1/T0A9fwcAOH79P+h+tIAsfl/AUn62gDp+jAAIfvlAIH7vwHR+mEBmfhrAPn4WACZ++8AwfxbAS3+7gBq//sAiv+lAef/jQFOADMB1f8NAYv/zwH3Af8B
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 6, "gen": "57fae3eee61e486c963969a17628eff2", "off": 927232, "pcm": "SQBLAjIAwwF3AFUBwAAFAQMBwgAVAVgAowC5/0MAaP9VAOD/sgBXAIcASAAsAC4AAwBlANz/ZgCx/xsA1f9L/38AQf7cAK39oABZ/RoAsfz6/038QQAN/FUA+fv3//n7tP/R+8f/kfu3/2H7bP9x+5D/kfskAGn7UgDx+ur/ufoz/8n6R/+x+hkA
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 7, "gen": "57fae3eee61e486c963969a17628eff2", "off": 1103872, "pcm": "sfWB4ZHwgcpB6wGwAekBpkHhga4B1oG/wdKB1sHhkfGJ+08JXwn/GrcFvyajAr8tvwh/LicHnx4h918EQeQx8EHWQdvByoG+AcCBpgG5gaeBtgG9Ab3B0MHVQeDx9mHxrwtnBD8QPxM/E/8enx3/LH8lPzW/Iz8zXx7/M18ePzJ/Hx8ffxO3BNn
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 8, "gen": "57fae3eee61e486c963969a17628eff2", "off": 1280512, "pcm": "TwW/HacFHx6fBt8dJwcfHJ8G3xqXBZ8cTwT/HC8EHxoHBb8YZwWfG68E3x4HBL8d9wNfGicEXxkfBB8bZwOfGgsDHxebA18VZwQfF38EXxcvBN8TuwMfERcD3xPnAt8Y1wKfGOsC3xPbAj8SHwKfFMcB/xYzAt8WfwI/FNcBnxKwAB8SxACPD4c
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 9, "gen": "57fae3eee61e486c963969a17628eff2", "off": 1457152, "pcm": "CwP5/d8CsfuvAun4BwIB+jMCqftDA+H68wOB+a8DIfnrAoH6xwId/LMCpfy/ApH74wJp+78C0f03A4wAfwPFAS8EUwIvBRcB3wMF/RcC8fr1AdH7vwKh+68Dofv3A6n7ZwTZ+4cEJfyvA3H72wJB+lcDIfpnA5n7fwOh/A8E7fxTAx38TwMV/Lc
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 10, "gen": "57fae3eee61e486c963969a17628eff2", "off": 1633792, "pcm": "3w/PDN8TRwVvD7X8Tw2h+V8Lifr/C2HsHxPB618Q/wNhAW8N4fWlAKH4EfI/DIHpnxQh7n8C2f4h6g8JYekXBy//rwfPDA8NnwJvDcHr/wgB3d8NAezfGaAAXxCA/+H5EfYt/GHxvw3x858SmfyfDrsDzwQeAIH6MfQ3BiHtfxPh7q8IcfmpAc
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 11, "gen": "57fae3eee61e486c963969a17628eff2", "off": 1810432, "pcm": "ugA/HI8Bfx0fAx8dgwO/G+MC/xoHA38a6wLfGZcCnxnrAt8ZVwP/GtsD/xq3BP8Z3wQfGmcEPxp3BP8YHwS/F/8DHxhfBH8aBwXfHEcF/xvnBN8YBwV/Fj8G/xW/Bh8WVwUfFbsDXxUnBP8WBwY/GAcHvxc3Bt8VnwU/FE8GXxSfBn8VNwUfFR
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 12, "gen": "57fae3eee61e486c963969a17628eff2", "off": 1987072, "pcm": "pwTfCT8Fzwr/Bc8LLwWPDD8EDw6vBP8PnwWPDwcFfw/PBB8PTwSfDrsDnw5HBV8OhwaPD+cFjw5zAz8OfQF/DgcF7w2fCW8MrwcvC/8D/wtnAx8ONwRfDicGzw4PBu8OfwS/EQ8EHxKvBG8NxwQvC38FbwxPBF8OOwPfDScEPwzPBM8MRwUfDf
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 13, "gen": "57fae3eee61e486c963969a17628eff2", "off": 2163712, "pcm": "Xx0Z+78evxU/CN8f4fAPDjH2Bf5fDZsC3xYbAs8HQfZB9AHvxfxXBH8Z3x+fHx8eHxTvCZ8MswK9Ac8Jvf2fEE39HxFcAJ8Qvww/Fb8Qvw9h9qH1oeKB7QHtQf4F/78O/wlfHM8M3x0fFP8ZfxkfFjcGfxrB8j8p2fz/MA8MXxt/DUn9pwGB9B
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 14, "gen": "57fae3eee61e486c963969a17628eff2", "off": 2340352, "pcm": "kfdp/eH2YP9J+EwAwfgDAFH3MwFx9nMDsfePA/H4xwJR968CYfZ3ATH5S//R+4j/8fnbAZH3FwPR978C8fhTAjn5qwPx+CcGmfmPCKn6jwiZ+p8IcfnvC9H57w2p+s8MefmPC/H3/wqR+a8K+fuPCtH7PwoZ+t8KKfnPC3H5Dw15+q8OwfqfDf
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 15, "gen": "57fae3eee61e486c963969a17628eff2", "off": 2516992, "pcm": "WgCR9CP/EfGR+7HzsftR9/P+gfZ/AIHyuf4B8d38EfJJ/mHxlQBh7Pr/Aegh/eHpaf2B7s0A4e8xAeHsxf0h6rn7geoF/yHrqwIh6bcBIeYR/kHmbf7B6DsCAen/AqHlTwDB4kv/geOTAoHjlwVB4BsDgd6c/wHhtwBh5F8EweRPBEHh7QDB30
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 16, "gen": "57fae3eee61e486c963969a17628eff2", "off": 2693632, "pcm": "HfyaAM/+R/9PAlcHef1fByn4hwMB/TcH9/5PCOX89wU1/M8ESfiHANH0sfgZ+LH3Afdt/FH1DwCx9zEBWfl5+1n5wfoR9CH6Qe3x8mHw8fDx8UH0ge+R9wHxWfkx8Bn4EfHx94HzAfth9En7UfFh9rHwAfTB9jH3OfmZ+OH2cfnZ+CX8AfvOAD
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 17, "gen": "57fae3eee61e486c963969a17628eff2", "off": 2870272, "pcm": "tP8B8Y8AkfIoAGH0Ef+x88v+8fIp/8H0BgCR9jsAgfXK/6Hy+P/R8FUAofHg/8Hz7f4R9ZX+4fRN/yH1GgAx9jAAwfbP/5H1aP/R8zYAcfSfACH2w/8R97/+gfjf/uH48gAZ+AMCGfinAEn4l/+R9/b/8fa0AOH2pQCx95P/wfl9/1H7PQHR+Z
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 18, "gen": "57fae3eee61e486c963969a17628eff2", "off": 3046912, "pcm": "tfwB7PH8Ae4N/XHwVf1R8jX+MfRe/3H1Yv9x9l3+ofe9/SH3Ff4h9Vr/gfXK/wn44/6B+3v+Lfwb/wn4Tf/h9Gn+YfRN/aHz9f2B8iMAsfNvAfn4uwDp+4H/2fkJALH2jQEx9nsBAfkDAGH5BwBB928Ccff3A1n7HwK//q7/2f6v/wn7kwFx+T
+[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 19, "gen": "57fae3eee61e486c963969a17628eff2", "off": 3223552, "pcm": "kfdR9on4AfbJ+XH0gflB8Rn4Ye/x+BHw0fmR8cn4wfHR9yHxUfkh83n7Mfap+kH1qfjR8Bn5IexB+qHpufkh6tH3AeuB90HrqfpB61X9YepF/GHn6frh5Q38Yea9/AHo8frh6nn4oe4x+rHwVf6h7pf+oezJ/GHt3fyB7Ln9QejB/SHmkfsB6m
+[{"cmd": "done", "gen": "57fae3eee61e486c963969a17628eff2", "frames": 3532288, "url": "/gradio_api/file=/tmp/mm3_songs/tmpt0lkmhwv.wav"}, "done: 80.1s of audio in 71s \u2014 rendering share video...", "/tmp/gradio/d796b0b866a2e10d5b6cb220931cbe35ae45203183b99ffe1b4cb13adf1802e0/tmpt0lkmhwv.wav", 42]
+status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2026, 9, 28, 7, 15, 34, 896967), progress_data=None, log=None, type='status')
+OK /tmp/gradio/d796b0b866a2e10d5b6cb220931cbe35ae45203183b99ffe1b4cb13adf1802e0/tmpt0lkmhwv.wav
+=== part 2 steps=30
+[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
+status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 15, 38, 555147), progress_data=None, log=None, type='status')
 Traceback (most recent call last):
-  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 89, in <module>
-    wav = attempt(lyr, duration, steps)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 100, in <module>
+    wav = attempt(lyr.strip(), 80, steps)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 70, in attempt
     raise exc
   File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
@@ -34,5 +59,25 @@ Traceback (most recent call last):
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1286, in _predict
     raise AppError(message=message, **result)
-gradio_client.exceptions.AppError: The requested GPU duration (260s) is larger than the maximum allowed
+gradio_client.exceptions.AppError: The requested GPU duration (182s) is larger than the maximum allowed
 
+=== part 2 steps=20
+[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
+status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=None, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 15, 40, 281898), progress_data=None, log=None, type='status')
+Traceback (most recent call last):
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 100, in <module>
+    wav = attempt(lyr.strip(), 80, steps)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 70, in attempt
+    raise exc
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1166, in _inner
+    predictions = _predict(*data, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1286, in _predict
+    raise AppError(message=message, **result)
+gradio_client.exceptions.AppError: You have exceeded your ZeroGPU quota (170s requested vs. -47s left). Try again in 23:58:42. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens
+
+parts rendered: 1/4
