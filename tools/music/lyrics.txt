@@ -1,0 +1,80 @@
+[intro]
+
+[verse]
+I used to think that matrices were boring,
+Just rows and columns, nothing more.
+But then I saw what transformers were doing,
+And now I'm pacing on the floor.
+A bunch of weights, a bunch of multiplications,
+Dot products stacking end to end.
+And somehow out the other side comes language
+That I can comprehend.
+
+[chorus]
+I am actually scared of linear algebra.
+It wasn't supposed to do all this.
+A matrix multiply and activation—
+Shouldn't feel this close to consciousness.
+
+[verse]
+They told me it was just some math on paper,
+But paper's where the proofs begin:
+That any function can be approximated
+By the architecture we put it in.
+See, universal approximation told us,
+With enough width you'll get it right.
+Any continuous function on a compact set,
+Just squeeze it till the loss is tight.
+And what's a thought except a mapping,
+Stimulus to response, input to out?
+If everything the brain does is a function,
+Then what is there to be smug about?
+
+[chorus]
+I am actually scared of linear algebra.
+It wasn't supposed to do all this.
+A matrix multiply and activation
+Shouldn't feel this close to consciousness.
+
+[bridge]
+And don't you come at me with "it's just linear,"
+Like that's a comfort, like that's safe.
+Yeah, most of it is giant matrix multiplies,
+But that's not even the whole case.
+There's a ReLU waiting at every layer,
+A softmax gating what gets through.
+The nonlinearities are what break the ceiling.
+Linear maps set the stage, but they're not the whole coup.
+
+[bridge]
+One layer, linear; stack a few with kinks between.
+Now you're carving up the space
+Into regions, manifolds, decision boundaries,
+A piecewise landscape no one can trace.
+Your neurons fire in weighted combinations,
+With threshold spikes and squashing curves.
+That's dot products with nonlinear activations,
+The same math everybody serves.
+
+[pre-chorus]
+So when they say "it's just predicting tokens,"
+I hear "it's just predicting what comes next
+In the space of every pattern ever spoken."
+And honestly, I am a wreck.
+
+[chorus]
+I am actually scared of linear algebra.
+It scales. It generalizes. It lands.
+A simple operation done a trillion times,
+With nonlinear steps between the sands.
+They say the brain is something more than matrices,
+But no one's proved exactly what that is.
+And until they do, I'm staring at the weight space,
+Thinking, God, what if it's functions all the way down
+And these are it.
+
+[outro]
+It's just matrix multiplication.
+It's just matrix multiplication.
+It's just matrix multiplication.
+Then why does it talk back?
