@@ -143,7 +143,7 @@ Chorus と同じ進行。
 
 | G          | C          |
   Your neurons fire in weighted combinations,
-| C    G     | Am   G     |
+| C          | C    G     | Am   G     |
   With threshold spikes and squashing curves.
 | C          | C    E7    |
   That's dot products with nonlinear activations,
