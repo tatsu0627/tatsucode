@@ -76,17 +76,28 @@ def attempt(lyrics, duration, steps):
     raise RuntimeError("no audio file in outputs")
 
 
-# One call is capped at ~300 GPU-seconds (about 160 s of audio), so render the
-# song in two halves split at the bridge and join them with a short crossfade.
-cut = LYRICS.index("[bridge]")
-parts = [(LYRICS[:cut].strip(), 135), (LYRICS[cut:].strip(), 140)]
+# One call is capped at roughly 216-260 GPU-seconds, about 100 s of audio at
+# 30 steps, so render the song in four sections with the same prompt and seed
+# and join them with short crossfades after trimming edge silence.
+def split_points(text):
+    idx, pos = [], 0
+    for tag, nth in [("[verse]", 2), ("[bridge]", 1), ("[pre-chorus]", 1)]:
+        at = -1
+        for _ in range(nth):
+            at = text.index(tag, at + 1)
+        idx.append(at)
+    return idx
+
+
+a, b, c = split_points(LYRICS)
+parts = [LYRICS[:a], LYRICS[a:b], LYRICS[b:c], LYRICS[c:]]
 files = []
-for i, (lyr, duration) in enumerate(parts, 1):
+for i, lyr in enumerate(parts, 1):
     wav = None
-    for steps in (30, 16):
-        log.write(f"=== part {i} duration={duration} steps={steps}\n")
+    for steps in (30, 20):
+        log.write(f"=== part {i} steps={steps}\n")
         try:
-            wav = attempt(lyr, duration, steps)
+            wav = attempt(lyr.strip(), 80, steps)
             log.write(f"OK {wav}\n")
             break
         except Exception:
@@ -94,15 +105,27 @@ for i, (lyr, duration) in enumerate(parts, 1):
             log.flush()
     if not wav:
         break
-    dst = f"{OUT}/minimax-part{i}{os.path.splitext(wav)[1]}"
-    shutil.copy(wav, dst)
+    dst = f"{OUT}/minimax-part{i}.wav"
+    trim = ("silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
+            "silenceremove=start_periods=1:start_threshold=-50dB,areverse")
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav, "-af", trim, "-ar", "44100",
+                    "-ac", "2", dst], check=True)
     files.append(dst)
-if len(files) == 2:
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", files[0], "-i", files[1],
-                    "-filter_complex", "[0:a][1:a]acrossfade=d=1.5:c1=tri:c2=tri[a]", "-map", "[a]",
-                    "-codec:a", "libmp3lame", "-b:a", "256k", f"{OUT}/minimax-acoustic.mp3"], check=True)
+if files:
+    inputs, chain = [], ""
+    for f in files:
+        inputs += ["-i", f]
+    label = "[0:a]"
+    for k in range(1, len(files)):
+        chain += f"{label}[{k}:a]acrossfade=d=1:c1=tri:c2=tri[x{k}];"
+        label = f"[x{k}]"
+    args = ["ffmpeg", "-loglevel", "error", "-y", *inputs]
+    if len(files) > 1:
+        args += ["-filter_complex", chain.rstrip(";"), "-map", label]
+    subprocess.run(args + ["-codec:a", "libmp3lame", "-b:a", "256k", f"{OUT}/minimax-acoustic.mp3"], check=True)
     for f in files:
         subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", f, "-codec:a", "libmp3lame",
-                        "-b:a", "256k", os.path.splitext(f)[0] + ".mp3"], check=True)
+                        "-b:a", "256k", f[:-4] + ".mp3"], check=True)
         os.remove(f)
+log.write(f"parts rendered: {len(files)}/4\n")
 log.close()

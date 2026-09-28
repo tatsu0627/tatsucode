@@ -20,7 +20,7 @@ jobs:
           python-version: "3.11"
       - run: pip install -q gradio_client huggingface_hub
       - name: Run
-        run: python tools/music/probe_cap.py
+        run: python tools/music/run.py
       - name: Commit outputs
         run: |
           git config user.name "github-actions[bot]"
