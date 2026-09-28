@@ -1,0 +1,38 @@
+=== part 1 duration=135 steps=30
+[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
+status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 0, 56, 880082), progress_data=None, log=None, type='status')
+Traceback (most recent call last):
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 89, in <module>
+    wav = attempt(lyr, duration, steps)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 70, in attempt
+    raise exc
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1166, in _inner
+    predictions = _predict(*data, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1286, in _predict
+    raise AppError(message=message, **result)
+gradio_client.exceptions.AppError: The requested GPU duration (286s) is larger than the maximum allowed
+
+=== part 1 duration=135 steps=16
+[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
+status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 1, 5, 586212), progress_data=None, log=None, type='status')
+Traceback (most recent call last):
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 89, in <module>
+    wav = attempt(lyr, duration, steps)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 70, in attempt
+    raise exc
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1166, in _inner
+    predictions = _predict(*data, **kwargs)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1286, in _predict
+    raise AppError(message=message, **result)
+gradio_client.exceptions.AppError: The requested GPU duration (260s) is larger than the maximum allowed
+
