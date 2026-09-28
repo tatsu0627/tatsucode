@@ -1,37 +1,11 @@
-=== part 2
-[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
-[{"cmd": "status", "text": "ZeroGPU acquired \u2014 the band is warming up..."}, "ZeroGPU acquired \u2014 warming up...", {"__type__": "update"}, 42]
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 1, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 0, "pcm": "dABqAHwAbgBmAFsAdABdAH8AYQB0AF0AbQBcAGkAWwBrAGYAdABjAHYAVQBwAFoAawBRAGUAVgBaAFIAYQBIAFkAVQBZAE8ASwBKAEcARQBGAEUARABNAEsASwA+AE8AQgBKAD8AQQA1ADcAPwA8AEMAPQA3ADcAQABBADwAPABBADoASQBIADMANwA0A
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 2, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 220672, "pcm": "EwGzAhkBkQATAZ3+DQHJ/PwAWfvcAHn6yAAB+q4AEfqMALn6aADx+08Aif01AHn/GACXAQ4AwwP8/9cF9P/HB/7/XwkFAH8KEQAvCyUATws4AN8KSQDfCWQATwh2AGcGhQA3BI8A5QGiAIT/swBJ/boAYfu/AMH5rQC5+K8AOfidADn4iQDZ+HIA
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 3, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 397312, "pcm": "MAAyADAAMgAzADkANQA+ADAAOAAxAC8AMwA4ADIAKAA0ADAAMgApAC4ALwAvADAALgArADEALwAvACYAJwAgADEAKAAvAC0AJwAnACgAJgArACgAMwAlADUAIwAtACUAKgAgACkAHwAqACQAKQAgACkAJAArACkAIAApACkAJwAwACgAKgAyAC4A
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 4, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 573952, "pcm": "weqh6cHqoenh6sHpAevB6QHrwekB68HpAeuh6SHrgekh64HpIeuB6UHrgelh64HpgevB6cHr4ekB7EHqQeyB6qHs4eoB7UHrge2h6+HtIexB7oHsge4B7cHuYe0h78Htge8B7sHvQe5R8IHukfAB7wHxYe+h8eHvQfJx8PHyIfGh8/HxgfTx8oH1
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 5, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 750592, "pcm": "zws/BCcGXf/l/UX9MfT1/AHrBf7B5Pf+oeO9/WHnYfph7lH18fbB74X/4eqvBqHmDwyB458NQeMPC6Hm7wWh7H4AwfIV/HH3+fjR+QH3qfnR9uH2OfgR8qH6QewV/GHmYftB4tn4QeFx9UHkkfEh6iHuEfHh6zn4Aex4/yHvXwUx9S8JXfw/Cv8C
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 6, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 927232, "pcm": "EfCjA0Hz8fbh9gHyQf0B9VgA4fcB/En50fI1/AHqcf6h5xH7we2h9NH2sfHp/RH3oABe/8H8kQAx+Vb/6fo9ATn7uADJ+Gv+Qfot/PX9kfa5/IHxCflB8WH4gfSB9fH2weuh8wHmIe7B7eHuifuB9RcCofxzAbMByf/RABn7tf1h80sBAe9vBOHv
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 7, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 1103872, "pcm": "PwUB3Q8IgdpPCkHYPwzB1R8OQdS/D8HSzw8B0N8NQc0/CwHMnwhBzt8GgdIHB8HWbwhB2z8JAd4/CoHfHw2B4J8QYeEfE6HhXxQh4h8UgeN/EsHmvxAB7c8PMfQfD3n5zw2N/L8Lqf2fCbX9Twgb/+cGbwInBZ8GJwNfC10BfxCTAL8U9f+fF6f
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 8, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 1280512, "pcm": "bwTfBecDhwV3A5cEPwK/AnEBQwFnAcQA4QHIAM8COwHrAy8CbwUfBH8GtwaPBk8H7wX/BD8E2wKHAZsC2/83A2EA9wLFAR8C5wLpAQ8ERwKPBW8CBwfXAv8HRwQPCK8FxwaHBU8EvwMjAl8CtwGhAe8BRwHVATMCDwITA1cCgwKbAk8BJwOvAKs
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 9, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 1457152, "pcm": "4P83BP3+/wEl/N38yfvJ+dEAyfgXBgH6PwYEAKcBfwTt/EsCEfvz/1n7/wHd/dcEswEHBs8EJwRHBxf/9wUZ+/v/Mfp5+4H6+fn5+3n6n/6R/d/////mAPsAVwUPBN8IlwanBm8FewKnAiMADAAZ/q39Wfrh+4H40fvR+/38XgCT/ncCSQFbA0c
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 10, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 1633792, "pcm": "/zAB6H8qQd3/JIHWvynByz8qAcnfHoHRTw1B2sH8wdhB9UHO8fPBxsHyAbzB7wGzAe4BtgHsAcDB60HFoe1ByiHngdVB14HbgciB1AHKAcjB0AG7QdEBsEHNgayBygGrAcoBrMHKgbTBywG5AdCBwUHOwdRBxYHeQcHB40HBIeYBxsHdAceB0A
-[{"cmd": "chunk", "sr": 44100, "ch": 2, "seq": 11, "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "off": 1810432, "pcm": "HwAlAVYAFwFWAOoAOQC3AAQAsQDo/7QA0/+iAN7/WQDy/ycA9f8QADAA8/9mAPP/lgAJAKsAHQCvABMAswAlAJQAQwBsAH4ATQCVAF0AiAB1AHcAfwA1AHwA8v9QAKr/MAB0/w4Aqv8KAA4ALgBgAE4AmwBxALoAjwDFAJwA9wC3ABcBqgD8AE
-[{"cmd": "done", "gen": "fe5ad0ce4af14739b409bab09fb3f3e4", "frames": 2036224, "url": "/gradio_api/file=/tmp/mm3_songs/tmpau1ryo1x.wav"}, "done: 46.2s of audio in 40s \u2014 rendering share video...", "/tmp/gradio/afe4bf4c0aa376da376eed7c9d8b82916284bb9d7902d21de802d3b1a525fa0c/tmpau1ryo1x.wav", 42]
-status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2026, 9, 28, 7, 18, 4, 865065), progress_data=None, log=None, type='status')
-OK part 2
 === part 3
-[{"cmd": "status", "text": "Acquiring ZeroGPU..."}, {"__type__": "update"}, {"__type__": "update"}, {"__type__": "update"}]
-status: StatusUpdate(code=<Status.FINISHED: 'FINISHED'>, rank=0, queue_size=None, eta=None, success=False, time=datetime.datetime(2026, 9, 28, 7, 18, 13, 337568), progress_data=None, log=None, type='status')
 Traceback (most recent call last):
   File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 105, in <module>
     wav = attempt(lyr.strip(), 80, 20)
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 70, in attempt
-    raise exc
-  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/concurrent/futures/thread.py", line 58, in run
-    result = self.fn(*self.args, **self.kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1166, in _inner
-    predictions = _predict(*data, **kwargs)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.16/x64/lib/python3.11/site-packages/gradio_client/client.py", line 1286, in _predict
-    raise AppError(message=message, **result)
-gradio_client.exceptions.AppError: You have exceeded your ZeroGPU runs limit. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens
+  File "/home/runner/work/tatsucode/tatsucode/tools/music/run.py", line 61, in attempt
+    client = Client(SPACE, hf_token=os.environ.get("HF_TOKEN") or None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Client.__init__() got an unexpected keyword argument 'hf_token'
 
 parts rendered: 2/4
