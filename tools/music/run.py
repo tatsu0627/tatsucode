@@ -55,31 +55,38 @@ state = {
 }
 
 log = open(f"{OUT}/minimax-log.txt", "w")
-try:
+
+
+def attempt(duration, steps):
     client = Client(SPACE)
-    job = client.submit(state, 280, 42, False, 0, 24, 1.7, api_name="/studio_generate")
-    last = None
+    job = client.submit(state, duration, 42, False, 0, steps, 1.7, api_name="/studio_generate")
     for update in job:
-        last = update
-        log.write(json.dumps(update, default=str)[:400] + "\n")
+        log.write(json.dumps(update, default=str)[:300] + "\n")
         log.flush()
-    outs = job.outputs()
-    log.write("final outputs: " + json.dumps(outs[-1] if outs else None, default=str)[:2000] + "\n")
-    wav = None
-    for o in reversed(outs):
+    log.write(f"status: {job.status()}\n")
+    exc = job.exception() if hasattr(job, "exception") else None
+    if exc:
+        raise exc
+    for o in reversed(job.outputs()):
         for item in (o if isinstance(o, (list, tuple)) else [o]):
             p = item.get("path") if isinstance(item, dict) else item
             if isinstance(p, str) and os.path.exists(p) and p.lower().endswith((".wav", ".mp3", ".flac")):
-                wav = p
-                break
-        if wav:
-            break
-    if not wav:
-        raise RuntimeError("no audio file in outputs")
+                return p
+    raise RuntimeError("no audio file in outputs")
+
+
+wav = None
+for duration, steps in [(280, 24), (280, 12), (240, 10), (180, 10)]:
+    log.write(f"=== attempt duration={duration} steps={steps}\n")
+    try:
+        wav = attempt(duration, steps)
+        log.write(f"OK {wav}\n")
+        break
+    except Exception:
+        log.write(traceback.format_exc() + "\n")
+        log.flush()
+if wav:
     shutil.copy(wav, f"{OUT}/minimax-acoustic{os.path.splitext(wav)[1]}")
     subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav, "-codec:a", "libmp3lame",
                     "-b:a", "256k", f"{OUT}/minimax-acoustic.mp3"], check=True)
-    log.write("OK\n")
-except Exception:
-    log.write(traceback.format_exc())
 log.close()
