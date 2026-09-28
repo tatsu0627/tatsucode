@@ -91,42 +91,36 @@ def split_points(text):
 
 a, b, c = split_points(LYRICS)
 parts = [LYRICS[:a], LYRICS[a:b], LYRICS[b:c], LYRICS[c:]]
-files = []
+TRIM = ("silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
+        "silenceremove=start_periods=1:start_threshold=-50dB,areverse")
+
+# The anonymous ZeroGPU quota covers about one section per day, so each run
+# renders only the sections still missing and stitches once all four exist.
 for i, lyr in enumerate(parts, 1):
-    wav = None
-    for steps in (30, 20):
-        log.write(f"=== part {i} steps={steps}\n")
-        try:
-            wav = attempt(lyr.strip(), 80, steps)
-            log.write(f"OK {wav}\n")
-            break
-        except Exception:
-            log.write(traceback.format_exc() + "\n")
-            log.flush()
-    if not wav:
+    dst = f"{OUT}/minimax-part{i}.mp3"
+    if os.path.exists(dst):
+        continue
+    log.write(f"=== part {i}\n")
+    try:
+        wav = attempt(lyr.strip(), 80, 20)
+    except Exception:
+        log.write(traceback.format_exc() + "\n")
         break
-    shutil.copy(wav, f"{OUT}/raw-part{i}{os.path.splitext(wav)[1]}")
-    dst = f"{OUT}/minimax-part{i}.wav"
-    trim = ("silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
-            "silenceremove=start_periods=1:start_threshold=-50dB,areverse")
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav, "-af", trim, "-ar", "44100",
-                    "-ac", "2", dst], check=True)
-    files.append(dst)
-if files:
-    inputs, chain = [], ""
-    for f in files:
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav, "-af", TRIM, "-ar", "44100",
+                    "-ac", "2", "-codec:a", "libmp3lame", "-b:a", "256k", dst], check=True)
+    log.write(f"OK part {i}\n")
+
+done = [f"{OUT}/minimax-part{i}.mp3" for i in range(1, 5) if os.path.exists(f"{OUT}/minimax-part{i}.mp3")]
+log.write(f"parts rendered: {len(done)}/4\n")
+if len(done) == 4:
+    inputs, chain, label = [], "", "[0:a]"
+    for f in done:
         inputs += ["-i", f]
-    label = "[0:a]"
-    for k in range(1, len(files)):
+    for k in range(1, 4):
         chain += f"{label}[{k}:a]acrossfade=d=1:c1=tri:c2=tri[x{k}];"
         label = f"[x{k}]"
-    args = ["ffmpeg", "-loglevel", "error", "-y", *inputs]
-    if len(files) > 1:
-        args += ["-filter_complex", chain.rstrip(";"), "-map", label]
-    subprocess.run(args + ["-codec:a", "libmp3lame", "-b:a", "256k", f"{OUT}/minimax-acoustic.mp3"], check=True)
-    for f in files:
-        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", f, "-codec:a", "libmp3lame",
-                        "-b:a", "256k", f[:-4] + ".mp3"], check=True)
-        os.remove(f)
-log.write(f"parts rendered: {len(files)}/4\n")
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", *inputs, "-filter_complex", chain.rstrip(";"),
+                    "-map", label, "-codec:a", "libmp3lame", "-b:a", "256k",
+                    f"{OUT}/minimax-acoustic.mp3"], check=True)
+    log.write("stitched minimax-acoustic.mp3\n")
 log.close()
