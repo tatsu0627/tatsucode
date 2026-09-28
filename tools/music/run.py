@@ -105,6 +105,7 @@ for i, lyr in enumerate(parts, 1):
             log.flush()
     if not wav:
         break
+    shutil.copy(wav, f"{OUT}/raw-part{i}{os.path.splitext(wav)[1]}")
     dst = f"{OUT}/minimax-part{i}.wav"
     trim = ("silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
             "silenceremove=start_periods=1:start_threshold=-50dB,areverse")
