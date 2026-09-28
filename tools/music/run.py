@@ -57,9 +57,10 @@ state = {
 log = open(f"{OUT}/minimax-log.txt", "w")
 
 
-def attempt(duration, steps):
+def attempt(lyrics, duration, steps):
     client = Client(SPACE)
-    job = client.submit(state, duration, 42, False, 0, steps, 1.7, api_name="/studio_generate")
+    st = dict(state, lyrics=lyrics)
+    job = client.submit(st, duration, 42, False, 0, steps, 1.7, api_name="/studio_generate")
     for update in job:
         log.write(json.dumps(update, default=str)[:300] + "\n")
         log.flush()
@@ -75,18 +76,33 @@ def attempt(duration, steps):
     raise RuntimeError("no audio file in outputs")
 
 
-wav = None
-for duration, steps in [(280, 24), (280, 12), (240, 10), (180, 10)]:
-    log.write(f"=== attempt duration={duration} steps={steps}\n")
-    try:
-        wav = attempt(duration, steps)
-        log.write(f"OK {wav}\n")
+# One call is capped at ~300 GPU-seconds (about 160 s of audio), so render the
+# song in two halves split at the bridge and join them with a short crossfade.
+cut = LYRICS.index("[bridge]")
+parts = [(LYRICS[:cut].strip(), 135), (LYRICS[cut:].strip(), 140)]
+files = []
+for i, (lyr, duration) in enumerate(parts, 1):
+    wav = None
+    for steps in (30, 16):
+        log.write(f"=== part {i} duration={duration} steps={steps}\n")
+        try:
+            wav = attempt(lyr, duration, steps)
+            log.write(f"OK {wav}\n")
+            break
+        except Exception:
+            log.write(traceback.format_exc() + "\n")
+            log.flush()
+    if not wav:
         break
-    except Exception:
-        log.write(traceback.format_exc() + "\n")
-        log.flush()
-if wav:
-    shutil.copy(wav, f"{OUT}/minimax-acoustic{os.path.splitext(wav)[1]}")
-    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", wav, "-codec:a", "libmp3lame",
-                    "-b:a", "256k", f"{OUT}/minimax-acoustic.mp3"], check=True)
+    dst = f"{OUT}/minimax-part{i}{os.path.splitext(wav)[1]}"
+    shutil.copy(wav, dst)
+    files.append(dst)
+if len(files) == 2:
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", files[0], "-i", files[1],
+                    "-filter_complex", "[0:a][1:a]acrossfade=d=1.5:c1=tri:c2=tri[a]", "-map", "[a]",
+                    "-codec:a", "libmp3lame", "-b:a", "256k", f"{OUT}/minimax-acoustic.mp3"], check=True)
+    for f in files:
+        subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", f, "-codec:a", "libmp3lame",
+                        "-b:a", "256k", os.path.splitext(f)[0] + ".mp3"], check=True)
+        os.remove(f)
 log.close()
